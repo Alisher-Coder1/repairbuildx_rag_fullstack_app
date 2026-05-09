@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useEffect } from 'react';
 import { createRoot } from "react-dom/client";
 import "./styles.css";
 
@@ -155,7 +155,169 @@ function TextField({ label, value, onChange, hint, placeholder }) {
   );
 }
 
+
+const PROGRESSIVE_CONSULTANT_STEPS = [
+  { key: "room", title: "1. Помещение", short: "Помещение" },
+  { key: "geometry", title: "2. Размеры", short: "Размеры" },
+  { key: "openings", title: "3. Проёмы", short: "Проёмы" },
+  { key: "surfaces", title: "4. Поверхности", short: "Поверхности" },
+  { key: "context", title: "5. Контекст ремонта", short: "Контекст" },
+  { key: "engineering", title: "6. Инженерные системы", short: "Инженерия" },
+  { key: "requirements", title: "7. Требования пользователя", short: "Требования" },
+  { key: "question", title: "8. Вопрос консультанту", short: "Вопрос" },
+];
+
+function normalizeUxText(value) {
+  return String(value || "").replace(/\s+/g, " ").trim();
+}
+
+function findUxHeading(title) {
+  const normalizedTitle = normalizeUxText(title).toLowerCase();
+  const headings = Array.from(document.querySelectorAll("h1, h2, h3, h4, h5, strong, legend"));
+  return headings.find((node) => normalizeUxText(node.textContent).toLowerCase().startsWith(normalizedTitle));
+}
+
+function findUxCardFromHeading(heading) {
+  if (!heading) return null;
+  return heading.closest("section, article, .card, .panel, .form-card, [class*='card'], [class*='Card']");
+}
+
+function findUxCardByText(text) {
+  const normalizedText = normalizeUxText(text).toLowerCase();
+  const nodes = Array.from(document.querySelectorAll("h1, h2, h3, h4, h5, strong, legend, summary"));
+  const heading = nodes.find((node) => normalizeUxText(node.textContent).toLowerCase().includes(normalizedText));
+  return findUxCardFromHeading(heading);
+}
+
+function closeAllUxSteps(exceptKey = "") {
+  document.querySelectorAll(".ux-step-card").forEach((card) => {
+    if (card.dataset.uxStepKey !== exceptKey) {
+      card.classList.add("ux-collapsed");
+      card.classList.remove("ux-open");
+    }
+  });
+}
+
+function openUxStep(stepKey) {
+  const card = document.querySelector(`.ux-step-card[data-ux-step-key="${stepKey}"]`);
+  if (!card) return;
+  closeAllUxSteps(stepKey);
+  card.classList.remove("ux-collapsed");
+  card.classList.add("ux-open");
+  card.dataset.uxUserOpened = "true";
+  card.scrollIntoView({ block: "nearest", behavior: "smooth" });
+}
+
+function getNextUxStepKey(currentKey) {
+  const index = PROGRESSIVE_CONSULTANT_STEPS.findIndex((step) => step.key === currentKey);
+  if (index < 0 || index >= PROGRESSIVE_CONSULTANT_STEPS.length - 1) return "";
+  return PROGRESSIVE_CONSULTANT_STEPS[index + 1].key;
+}
+
+function markUxStepCompleted(card) {
+  if (!card) return;
+  const controls = Array.from(card.querySelectorAll("input, select, textarea"));
+  const hasValue = controls.some((control) => {
+    if (control.type === "checkbox" || control.type === "radio") return control.checked;
+    return String(control.value || "").trim() !== "";
+  });
+  if (hasValue) {
+    card.dataset.uxCompleted = "true";
+  }
+}
+
+function prepareUxStepCard(step, index) {
+  const heading = findUxHeading(step.title);
+  const card = findUxCardFromHeading(heading);
+  if (!heading || !card) return;
+
+  card.classList.add("ux-step-card");
+  card.dataset.uxStepKey = step.key;
+
+  heading.classList.add("ux-step-heading");
+  heading.setAttribute("role", "button");
+  heading.setAttribute("tabindex", "0");
+
+  if (!card.dataset.uxPrepared) {
+    const hint = document.createElement("div");
+    hint.className = "ux-step-hint";
+    hint.textContent = "Нажмите, чтобы раскрыть или свернуть шаг";
+    heading.insertAdjacentElement("afterend", hint);
+
+    const actions = document.createElement("div");
+    actions.className = "ux-step-actions";
+    const nextKey = getNextUxStepKey(step.key);
+    actions.innerHTML = nextKey
+      ? '<button type="button" class="ux-step-next-button">Готово, следующий шаг</button>'
+      : '<button type="button" class="ux-step-next-button">Готово, перейти к консультации</button>';
+    card.appendChild(actions);
+
+    actions.querySelector("button")?.addEventListener("click", (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      markUxStepCompleted(card);
+      card.classList.add("ux-collapsed");
+      card.classList.remove("ux-open");
+      if (nextKey) openUxStep(nextKey);
+      if (!nextKey) {
+        document.querySelector(".ux-consultant-panel")?.scrollIntoView({ block: "center", behavior: "smooth" });
+      }
+    });
+
+    heading.addEventListener("click", () => {
+      const isCollapsed = card.classList.contains("ux-collapsed");
+      if (isCollapsed) {
+        openUxStep(step.key);
+      } else {
+        card.classList.add("ux-collapsed");
+        card.classList.remove("ux-open");
+      }
+    });
+
+    heading.addEventListener("keydown", (event) => {
+      if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        heading.click();
+      }
+    });
+
+    card.addEventListener("change", () => markUxStepCompleted(card), true);
+    card.addEventListener("input", () => markUxStepCompleted(card), true);
+
+    card.dataset.uxPrepared = "true";
+  }
+
+  if (!card.dataset.uxUserOpened && index > 0) {
+    card.classList.add("ux-collapsed");
+    card.classList.remove("ux-open");
+  } else if (index === 0) {
+    card.classList.add("ux-open");
+    card.classList.remove("ux-collapsed");
+  }
+}
+
+function setupProgressiveConsultantUx() {
+  if (typeof document === "undefined") return;
+
+  PROGRESSIVE_CONSULTANT_STEPS.forEach((step, index) => prepareUxStepCard(step, index));
+
+  const consultantCard = findUxCardByText("Результат консультанта");
+  if (consultantCard) {
+    consultantCard.classList.add("ux-consultant-panel");
+  }
+
+  ["Payload preview", "Найденные RAG-фрагменты", "Технические данные"].forEach((title) => {
+    const debugCard = findUxCardByText(title);
+    if (debugCard) debugCard.classList.add("ux-debug-only");
+  });
+}
+
+
 function App() {
+  useEffect(() => {
+    setupProgressiveConsultantUx();
+  });
+
   const [roomType, setRoomType] = useState("кухня");
   const [zoneType, setZoneType] = useState(ROOM_TO_ZONE["кухня"]);
   const [zoneChangedManually, setZoneChangedManually] = useState(false);
