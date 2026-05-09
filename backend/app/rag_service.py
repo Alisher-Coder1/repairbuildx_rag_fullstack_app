@@ -10,6 +10,7 @@ from openai import OpenAI
 
 from .config import settings
 from .schemas import RoomInput, RoomMetrics, SearchResult
+from .consultation_composer import compose_consultation_answer
 
 SYSTEM_PROMPT = """
 Ты — AI-консультант по подготовке базового технического задания на ремонт помещения.
