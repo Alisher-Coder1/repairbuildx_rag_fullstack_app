@@ -226,6 +226,105 @@ def _build_questions(room_type: str, zone_type: str, shape: str) -> list[str]:
     return questions[:6]
 
 
+
+
+def _context_contains_off_topic_request(context: Any | None) -> bool:
+    # Strong off-topic guard.
+    #
+    # compose_consultation_answer receives locals(). That context may also contain the
+    # already-built repair answer, so the old extractor could find repair text before
+    # it found the user's real question. This scanner looks through all short
+    # user-like strings and blocks only when it finds an off-topic string without
+    # repair signal.
+    visited: set[int] = set()
+
+    def is_short_user_text(value: str) -> bool:
+        v = value.strip()
+        if not v:
+            return False
+        if len(v) > 300:
+            return False
+        if any(marker in v for marker in ("{", "}", "[", "]", "geometry_mode", "manual_floor_area", "wall_segments")):
+            return False
+        return True
+
+    def walk(value: Any) -> bool:
+        if value is None:
+            return False
+
+        object_id = id(value)
+        if object_id in visited:
+            return False
+        visited.add(object_id)
+
+        if isinstance(value, str):
+            if is_short_user_text(value) and _question_is_off_topic(value):
+                return True
+            return False
+
+        if isinstance(value, dict):
+            priority_keys = (
+                "user_question",
+                "question",
+                "prompt",
+                "message",
+                "user_message",
+                "consultant_question",
+                "additional_notes",
+                "notes",
+                "text",
+            )
+            for key in priority_keys:
+                if key in value and walk(value.get(key)):
+                    return True
+            for nested_value in value.values():
+                if walk(nested_value):
+                    return True
+            return False
+
+        if isinstance(value, (list, tuple, set)):
+            for item in value:
+                if walk(item):
+                    return True
+            return False
+
+        if hasattr(value, "model_dump"):
+            try:
+                if walk(value.model_dump()):
+                    return True
+            except Exception:
+                pass
+
+        if hasattr(value, "dict"):
+            try:
+                if walk(value.dict()):
+                    return True
+            except Exception:
+                pass
+
+        for key in (
+            "user_question",
+            "question",
+            "prompt",
+            "message",
+            "user_message",
+            "consultant_question",
+            "additional_notes",
+            "notes",
+            "text",
+        ):
+            if hasattr(value, key):
+                try:
+                    if walk(getattr(value, key)):
+                        return True
+                except Exception:
+                    pass
+
+        return False
+
+    return walk(context)
+
+
 def compose_consultation_answer(raw_answer: Any, context: Any | None = None) -> str:
     # Convert old calculator/debug report into a user-facing consultation.
     raw = _safe_text(raw_answer).strip()
@@ -233,7 +332,7 @@ def compose_consultation_answer(raw_answer: Any, context: Any | None = None) -> 
 
     user_question = _extract_user_question_from_context(context)
 
-    if _question_is_off_topic(user_question):
+    if _question_is_off_topic(user_question) or _context_contains_off_topic_request(context):
         return (
             "## Консультация\n\n"
             "Ваш вопрос не относится к ремонту помещения, поэтому я не буду подменять ответ расчётом.\n\n"
