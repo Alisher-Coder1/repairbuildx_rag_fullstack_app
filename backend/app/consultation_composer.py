@@ -11,12 +11,46 @@ REPAIR_KEYWORDS = {
     "электрика", "отопление", "hvac", "кондиционер", "проём", "дверь", "окно",
     "плинтус", "материал", "материалы", "площадь", "периметр", "смета", "работы",
     "основание", "влага", "влажность", "подрезка", "демонтаж", "выравнивание",
+    "расч",
+    "посч",
+    "консультац",
+    "подбор",
+    "закуп",
+    "расход",
+    "норма",
+    "запас",
+    "срок",
+    "стоим",
+    "цена",
+    "этап",
+    "последовательн",
+    "мастер",
+    "подряд",
+    "чернов",
+    "чистов",
+    "мокр",
+    "сух",
+    "ремонтн",
 }
 
 OFF_TOPIC_KEYWORDS = {
     # Use stems as well as full words, so "погоде", "погоду", "погодой" are caught.
     "погод", "биткоин", "президент", "стих", "плов", "рецепт", "новост", "курс валют",
     "футбол", "кино", "музык", "сегодня", "дата", "время",
+    "любов",
+    "отношен",
+    "дружб",
+    "политик",
+    "религи",
+    "анекдот",
+    "шутк",
+    "психолог",
+    "мотивац",
+    "гороскоп",
+    "сонник",
+    "игр",
+    "песн",
+    "стихотвор",
 }
 
 
@@ -325,6 +359,129 @@ def _context_contains_off_topic_request(context: Any | None) -> bool:
     return walk(context)
 
 
+
+
+GENERIC_REPAIR_REQUESTS = {
+    "подготовь базовую консультацию и расчет для ремонта помещения.",
+    "подготовь базовую консультацию и расчёт для ремонта помещения.",
+}
+
+
+def _is_user_question_outside_repair_scope(question: str) -> bool:
+    # Broad product guard:
+    # - repair/construction questions are allowed;
+    # - known default repair prompts are allowed;
+    # - natural non-empty user questions without repair signal are blocked.
+    q = question.lower().strip()
+    if not q:
+        return False
+
+    q_normalized = re.sub(r"\s+", " ", q)
+    if q_normalized in GENERIC_REPAIR_REQUESTS:
+        return False
+
+    has_repair = any(word in q for word in REPAIR_KEYWORDS)
+    if has_repair:
+        return False
+
+    has_explicit_off_topic = any(word in q for word in OFF_TOPIC_KEYWORDS)
+    if has_explicit_off_topic:
+        return True
+
+    word_count = len(re.findall(r"[a-zа-яё0-9]+", q))
+    if word_count >= 2:
+        return True
+
+    return False
+
+
+def _context_contains_outside_repair_scope_request(context: Any | None) -> bool:
+    # Scans context for the real user question and applies broad repair-scope guard.
+    # It ignores technical payload/debug strings and existing repair answer text.
+    visited: set[int] = set()
+
+    def is_candidate_user_text(value: str) -> bool:
+        v = value.strip()
+        if not v:
+            return False
+        if len(v) > 300:
+            return False
+        if any(marker in v for marker in ("{", "}", "[", "]", "geometry_mode", "manual_floor_area", "wall_segments")):
+            return False
+        return True
+
+    def walk(value: Any) -> bool:
+        if value is None:
+            return False
+
+        object_id = id(value)
+        if object_id in visited:
+            return False
+        visited.add(object_id)
+
+        if isinstance(value, str):
+            return is_candidate_user_text(value) and _is_user_question_outside_repair_scope(value)
+
+        if isinstance(value, dict):
+            priority_keys = (
+                "user_question",
+                "question",
+                "prompt",
+                "message",
+                "user_message",
+                "consultant_question",
+                "additional_notes",
+                "notes",
+                "text",
+            )
+            for key in priority_keys:
+                if key in value and walk(value.get(key)):
+                    return True
+            for nested_value in value.values():
+                if walk(nested_value):
+                    return True
+            return False
+
+        if isinstance(value, (list, tuple, set)):
+            return any(walk(item) for item in value)
+
+        if hasattr(value, "model_dump"):
+            try:
+                if walk(value.model_dump()):
+                    return True
+            except Exception:
+                pass
+
+        if hasattr(value, "dict"):
+            try:
+                if walk(value.dict()):
+                    return True
+            except Exception:
+                pass
+
+        for key in (
+            "user_question",
+            "question",
+            "prompt",
+            "message",
+            "user_message",
+            "consultant_question",
+            "additional_notes",
+            "notes",
+            "text",
+        ):
+            if hasattr(value, key):
+                try:
+                    if walk(getattr(value, key)):
+                        return True
+                except Exception:
+                    pass
+
+        return False
+
+    return walk(context)
+
+
 def compose_consultation_answer(raw_answer: Any, context: Any | None = None) -> str:
     # Convert old calculator/debug report into a user-facing consultation.
     raw = _safe_text(raw_answer).strip()
@@ -332,10 +489,10 @@ def compose_consultation_answer(raw_answer: Any, context: Any | None = None) -> 
 
     user_question = _extract_user_question_from_context(context)
 
-    if _question_is_off_topic(user_question) or _context_contains_off_topic_request(context):
+    if _is_user_question_outside_repair_scope(user_question) or _context_contains_outside_repair_scope_request(context):
         return (
             "## Консультация\n\n"
-            "Ваш вопрос не относится к ремонту помещения, поэтому я не буду подменять ответ расчётом.\n\n"
+            "Ваш вопрос не относится к ремонту помещения, поэтому я не буду подменять его расчётом.\n\n"
             "Я могу помочь с ремонтом: площадями, покрытиями, материалами, этапами работ, проёмами, "
             "инженерными системами, рисками влажных зон и подготовкой основания.\n\n"
             "Сформулируйте вопрос по помещению — например: «Что учесть перед ремонтом кухни?» "
