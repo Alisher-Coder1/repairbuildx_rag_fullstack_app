@@ -468,13 +468,6 @@ function App() {
       return;
     }
 
-    if (roomShape === "круглая") {
-      setError(
-        "UI для круглой комнаты восстановлен, но backend-контракт для круглой геометрии нужно подключить следующим шагом. Не отправляем её в старый расчёт, чтобы не получить ложный результат."
-      );
-      return;
-    }
-
     setIsLoading(true);
 
     try {
@@ -904,7 +897,7 @@ function App() {
         <aside className="result-panel">
           <Section
             title="Результат консультанта"
-            subtitle="Пока backend поддерживает старый прямоугольный расчёт. Новый payload уже формируется."
+            subtitle="Backend принимает Stage 7.2 contract: прямоугольная и круглая геометрия считаются разными формулами."
           >
             {result ? (
               <>
@@ -992,7 +985,7 @@ function App() {
             )}
           </Section>
 
-          <Section title="Payload preview" subtitle="Новый контракт, который должен принять backend на Step 2.">
+          <Section title="Payload preview" subtitle="Stage 7.2 contract, который отправляется в backend.">
             <pre className="payload-preview">{JSON.stringify(payload, null, 2)}</pre>
           </Section>
         </aside>
