@@ -3,6 +3,31 @@ import { createRoot } from "react-dom/client";
 import "./styles.css";
 
 
+const PROPERTY_CONDITIONS = [
+  { value: "новостройка без отделки", label: "новостройка без отделки" },
+  { value: "черновая отделка", label: "черновая отделка" },
+  { value: "предчистовая отделка", label: "предчистовая отделка" },
+  { value: "старая отделка", label: "старая отделка" },
+];
+
+const BASE_OPTIONS = ["бетон", "бетонная стяжка", "штукатурка", "гипсокартон", "старая отделка"];
+BASE_OPTIONS.floor = ["бетонная стяжка", "бетон", "деревянное основание", "старая отделка"];
+BASE_OPTIONS.wall = ["штукатурка", "бетон", "гипсокартон", "старая отделка"];
+BASE_OPTIONS.walls = BASE_OPTIONS.wall;
+BASE_OPTIONS.ceiling = ["бетон", "штукатурка", "гипсокартон", "старая отделка"];
+
+const COVERING_OPTIONS = ["краска", "плитка", "ламинат", "обои", "декоративная штукатурка"];
+COVERING_OPTIONS.floor = ["ламинат", "плитка", "керамогранит", "линолеум", "паркет", "наливной пол"];
+COVERING_OPTIONS.wall = ["краска", "обои", "плитка", "декоративная штукатурка", "стеновые панели"];
+COVERING_OPTIONS.walls = COVERING_OPTIONS.wall;
+COVERING_OPTIONS.ceiling = ["краска", "натяжной потолок", "гипсокартон", "штукатурка"];
+
+const YES_NO_UNKNOWN_OPTIONS = ["yes", "no", "unknown"];
+const YES_NO_AUTO_UNKNOWN_OPTIONS = ["auto", "yes", "no", "unknown"];
+const ALIGNMENT_OPTIONS = YES_NO_UNKNOWN_OPTIONS;
+
+
+
 const STAGE_7_3_UX = {
   showDeveloperDebug: false,
   showRawRagFragments: false,
