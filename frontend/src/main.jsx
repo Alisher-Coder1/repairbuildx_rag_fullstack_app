@@ -469,10 +469,201 @@ function setupProgressiveConsultantUxV2() {
 }
 
 
+
+function getUxStepTitle(stepKey) {
+  return PROGRESSIVE_CONSULTANT_STEPS.find((step) => step.key === stepKey)?.title || stepKey;
+}
+
+function scrollToUxStep(stepKey) {
+  const card = document.querySelector(`.ux-step-card[data-ux-step-key="${stepKey}"]`);
+  if (!card) return;
+  openUxStep(stepKey);
+  card.scrollIntoView({ block: "start", behavior: "smooth" });
+}
+
+function getUserQuestionTextarea() {
+  const questionStep = document.querySelector('.ux-step-card[data-ux-step-key="question"]');
+  return questionStep?.querySelector("textarea") || null;
+}
+
+function getSubmitConsultationButton() {
+  const buttons = Array.from(document.querySelectorAll("button"));
+  return buttons.find((button) => normalizeUxText(button.textContent).toLowerCase().includes("сформировать консультацию")) || null;
+}
+
+function getConsultationText() {
+  const panel = document.querySelector(".ux-consultant-panel");
+  if (!panel) return "";
+  return normalizeUxText(panel.textContent || "");
+}
+
+function detectConsultationReady() {
+  const text = getConsultationText().toLowerCase();
+  return text.includes("ответ сформирован") || text.includes("консультация") || text.includes("краткий вывод");
+}
+
+function ensureUxStepNavigator() {
+  const stepsParent = document.querySelector(".ux-steps-grid-v2") || document.querySelector(".ux-steps-grid");
+  if (!stepsParent) return;
+
+  let nav = document.querySelector(".ux-step-navigator");
+  if (!nav) {
+    nav = document.createElement("nav");
+    nav.className = "ux-step-navigator";
+    nav.setAttribute("aria-label", "Навигация по этапам");
+    nav.innerHTML = `
+      <div class="ux-step-navigator-title">Этапы заполнения</div>
+      <div class="ux-step-navigator-buttons"></div>
+      <div class="ux-step-navigator-actions">
+        <button type="button" class="ux-open-all-steps">Раскрыть все</button>
+        <button type="button" class="ux-close-all-steps">Свернуть все</button>
+        <button type="button" class="ux-go-consultation">К консультации</button>
+      </div>
+    `;
+    stepsParent.insertAdjacentElement("beforebegin", nav);
+
+    nav.querySelector(".ux-open-all-steps")?.addEventListener("click", () => {
+      document.querySelectorAll(".ux-step-card").forEach((card) => {
+        card.classList.remove("ux-collapsed");
+        card.classList.add("ux-open");
+      });
+    });
+
+    nav.querySelector(".ux-close-all-steps")?.addEventListener("click", () => {
+      document.querySelectorAll(".ux-step-card").forEach((card) => {
+        card.classList.add("ux-collapsed");
+        card.classList.remove("ux-open");
+      });
+    });
+
+    nav.querySelector(".ux-go-consultation")?.addEventListener("click", () => {
+      document.querySelector(".ux-consultant-panel")?.scrollIntoView({ block: "start", behavior: "smooth" });
+    });
+  }
+
+  const buttonsWrap = nav.querySelector(".ux-step-navigator-buttons");
+  if (buttonsWrap && !buttonsWrap.children.length) {
+    PROGRESSIVE_CONSULTANT_STEPS.forEach((step) => {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "ux-step-jump";
+      button.dataset.uxJumpStep = step.key;
+      button.textContent = step.title.replace(/^\d+\.\s*/, "");
+      button.addEventListener("click", () => scrollToUxStep(step.key));
+      buttonsWrap.appendChild(button);
+    });
+  }
+
+  PROGRESSIVE_CONSULTANT_STEPS.forEach((step) => {
+    const card = document.querySelector(`.ux-step-card[data-ux-step-key="${step.key}"]`);
+    const button = nav.querySelector(`[data-ux-jump-step="${step.key}"]`);
+    if (!card || !button) return;
+    button.classList.toggle("is-completed", card.dataset.uxCompleted === "true");
+    button.classList.toggle("is-open", card.classList.contains("ux-open"));
+  });
+}
+
+function ensureConsultationConversationTools() {
+  const panel = document.querySelector(".ux-consultant-panel");
+  if (!panel) return;
+
+  panel.classList.add("ux-conversation-panel");
+
+  let tools = panel.querySelector(".ux-consultation-tools");
+  if (!tools) {
+    tools = document.createElement("div");
+    tools.className = "ux-consultation-tools";
+    tools.innerHTML = `
+      <button type="button" class="ux-tools-to-steps">Посмотреть этапы</button>
+      <button type="button" class="ux-tools-to-question">Задать уточнение</button>
+      <button type="button" class="ux-tools-new-question">Новая консультация</button>
+    `;
+    const firstUsefulChild = panel.querySelector("h1, h2, h3, h4, strong, p, div");
+    if (firstUsefulChild) {
+      firstUsefulChild.insertAdjacentElement("afterend", tools);
+    } else {
+      panel.prepend(tools);
+    }
+
+    tools.querySelector(".ux-tools-to-steps")?.addEventListener("click", () => {
+      document.querySelector(".ux-step-navigator")?.scrollIntoView({ block: "start", behavior: "smooth" });
+    });
+
+    tools.querySelector(".ux-tools-to-question")?.addEventListener("click", () => {
+      scrollToUxStep("question");
+      const textarea = getUserQuestionTextarea();
+      if (textarea) textarea.focus();
+    });
+
+    tools.querySelector(".ux-tools-new-question")?.addEventListener("click", () => {
+      scrollToUxStep("question");
+      const textarea = getUserQuestionTextarea();
+      if (textarea) {
+        textarea.value = "";
+        textarea.dispatchEvent(new Event("input", { bubbles: true }));
+        textarea.focus();
+      }
+    });
+  }
+
+  let follow = panel.querySelector(".ux-followup-box");
+  if (!follow) {
+    follow = document.createElement("div");
+    follow.className = "ux-followup-box";
+    follow.innerHTML = `
+      <div class="ux-followup-title">Продолжить разговор</div>
+      <textarea class="ux-followup-textarea" rows="3" placeholder="Например: уточни по влажной зоне, последовательности работ или выбору материала"></textarea>
+      <div class="ux-followup-actions">
+        <button type="button" class="ux-followup-send">Отправить уточнение</button>
+        <button type="button" class="ux-followup-show-question">Открыть этап 8</button>
+      </div>
+      <div class="ux-followup-hint">Уточнение будет передано в поле «Вопрос консультанту» и запустит новую консультацию.</div>
+    `;
+    panel.appendChild(follow);
+
+    follow.querySelector(".ux-followup-show-question")?.addEventListener("click", () => {
+      scrollToUxStep("question");
+      getUserQuestionTextarea()?.focus();
+    });
+
+    follow.querySelector(".ux-followup-send")?.addEventListener("click", () => {
+      const followupTextarea = follow.querySelector(".ux-followup-textarea");
+      const questionTextarea = getUserQuestionTextarea();
+      const submitButton = getSubmitConsultationButton();
+      const value = String(followupTextarea?.value || "").trim();
+
+      if (!value) {
+        followupTextarea?.focus();
+        return;
+      }
+
+      if (!questionTextarea || !submitButton) {
+        scrollToUxStep("question");
+        return;
+      }
+
+      questionTextarea.value = value;
+      questionTextarea.dispatchEvent(new Event("input", { bubbles: true }));
+      questionTextarea.dispatchEvent(new Event("change", { bubbles: true }));
+      submitButton.click();
+      followupTextarea.value = "";
+      panel.scrollIntoView({ block: "start", behavior: "smooth" });
+    });
+  }
+}
+
+function setupProgressiveConsultantUxV4() {
+  if (typeof document === "undefined") return;
+  ensureUxStepNavigator();
+  ensureConsultationConversationTools();
+}
+
+
 function App() {
   useEffect(() => {
     setupProgressiveConsultantUx();
     setupProgressiveConsultantUxV2();
+    setupProgressiveConsultantUxV4();
   });
 
   const [roomType, setRoomType] = useState("кухня");

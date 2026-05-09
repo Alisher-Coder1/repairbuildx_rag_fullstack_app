@@ -993,3 +993,154 @@ details[hidden] {
   }
 }
 
+
+/* Stage 7.4.4: step navigation + continued conversation area */
+.ux-step-navigator {
+  grid-column: 1 / -1;
+  width: 100%;
+  margin: 14px 0 16px 0;
+  padding: 14px;
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.72);
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06);
+}
+
+.ux-step-navigator-title {
+  margin-bottom: 10px;
+  color: #0f172a;
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.ux-step-navigator-buttons {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(120px, 1fr));
+  gap: 8px;
+}
+
+.ux-step-jump {
+  border: 1px solid rgba(148, 163, 184, 0.45);
+  border-radius: 12px;
+  background: #ffffff;
+  color: #334155;
+  padding: 9px 10px;
+  font-weight: 700;
+  text-align: left;
+  cursor: pointer;
+}
+
+.ux-step-jump:hover,
+.ux-step-jump.is-open {
+  border-color: rgba(37, 99, 235, 0.55);
+  background: rgba(37, 99, 235, 0.07);
+  color: #1d4ed8;
+}
+
+.ux-step-jump.is-completed::after {
+  content: " ✓";
+  color: #047857;
+  font-weight: 900;
+}
+
+.ux-step-navigator-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 12px;
+}
+
+.ux-step-navigator-actions button,
+.ux-consultation-tools button,
+.ux-followup-actions button {
+  border: 0;
+  border-radius: 12px;
+  padding: 9px 12px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.ux-step-navigator-actions button,
+.ux-tools-to-steps,
+.ux-tools-to-question,
+.ux-tools-new-question,
+.ux-followup-show-question {
+  background: #e2e8f0;
+  color: #0f172a;
+}
+
+.ux-followup-send {
+  background: #2563eb;
+  color: #ffffff;
+}
+
+.ux-conversation-panel {
+  display: block !important;
+  width: 100% !important;
+  max-width: none !important;
+}
+
+.ux-consultation-tools {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin: 12px 0 16px 0;
+}
+
+.ux-followup-box {
+  margin-top: 18px;
+  padding: 16px;
+  border-radius: 16px;
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  background: rgba(248, 250, 252, 0.92);
+}
+
+.ux-followup-title {
+  margin-bottom: 10px;
+  color: #0f172a;
+  font-size: 16px;
+  font-weight: 800;
+}
+
+.ux-followup-textarea {
+  width: 100%;
+  min-height: 86px;
+  resize: vertical;
+  border: 1px solid rgba(148, 163, 184, 0.5);
+  border-radius: 14px;
+  padding: 12px;
+  font: inherit;
+  background: #ffffff;
+  color: #0f172a;
+}
+
+.ux-followup-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+}
+
+.ux-followup-hint {
+  margin-top: 8px;
+  color: #64748b;
+  font-size: 12px;
+}
+
+@media (max-width: 980px) {
+  .ux-step-navigator-buttons {
+    grid-template-columns: repeat(2, minmax(120px, 1fr));
+  }
+}
+
+@media (max-width: 560px) {
+  .ux-step-navigator-buttons {
+    grid-template-columns: 1fr;
+  }
+
+  .ux-consultation-tools button,
+  .ux-followup-actions button {
+    width: 100%;
+  }
+}
+
