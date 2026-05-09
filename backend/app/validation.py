@@ -22,8 +22,7 @@ ROOM_TO_ZONE = {
     "техническое помещение": "техническая зона",
 }
 
-SUPPORTED_SHAPES = {"прямоугольная", "круглая"}
-BLOCKED_SHAPES = {"Г-образная", "сложная"}
+SUPPORTED_SHAPES = {"прямоугольная", "круглая", "овальная", "сложная"}
 
 ALLOWED_ZONES = {
     "сухая зона",
@@ -54,6 +53,20 @@ def _positive_number(value: object, path: str, label: str, errors: List[Validati
         errors.append(_issue("NON_POSITIVE_NUMBER", f"{label} должен быть больше 0.", path))
 
 
+def _optional_positive_number(value: object, path: str, label: str, errors: List[ValidationIssue]) -> None:
+    if value is None:
+        return
+
+    try:
+        number = float(value)
+    except (TypeError, ValueError):
+        errors.append(_issue("INVALID_NUMBER", f"{label} должен быть числом.", path))
+        return
+
+    if number <= 0:
+        errors.append(_issue("NON_POSITIVE_NUMBER", f"{label} должен быть больше 0, если указан.", path))
+
+
 def _reasonable_dimension(value: object, path: str, label: str, errors: List[ValidationIssue]) -> None:
     _positive_number(value, path, label, errors)
     try:
@@ -65,6 +78,40 @@ def _reasonable_dimension(value: object, path: str, label: str, errors: List[Val
         errors.append(
             _issue(
                 "DIMENSION_OUT_OF_RANGE",
+                f"{label} выглядит нереалистично для помещения: {number}.",
+                path,
+            )
+        )
+
+
+def _reasonable_area(value: object, path: str, label: str, errors: List[ValidationIssue]) -> None:
+    _positive_number(value, path, label, errors)
+    try:
+        number = float(value)
+    except (TypeError, ValueError):
+        return
+
+    if number < 0.1 or number > 10000:
+        errors.append(
+            _issue(
+                "AREA_OUT_OF_RANGE",
+                f"{label} выглядит нереалистично для помещения: {number}.",
+                path,
+            )
+        )
+
+
+def _reasonable_perimeter(value: object, path: str, label: str, errors: List[ValidationIssue]) -> None:
+    _positive_number(value, path, label, errors)
+    try:
+        number = float(value)
+    except (TypeError, ValueError):
+        return
+
+    if number < 0.1 or number > 1000:
+        errors.append(
+            _issue(
+                "PERIMETER_OUT_OF_RANGE",
                 f"{label} выглядит нереалистично для помещения: {number}.",
                 path,
             )
@@ -111,16 +158,7 @@ def validate_consult_request(request: ConsultRequest) -> Tuple[ConsultRequest, L
             )
         )
 
-    if room_shape in BLOCKED_SHAPES:
-        errors.append(
-            _issue(
-                "UNSUPPORTED_ROOM_SHAPE",
-                f"Форма '{room_shape}' пока заблокирована: нужен отдельный безопасный geometry contract.",
-                "room_shape",
-            )
-        )
-
-    if room_shape not in SUPPORTED_SHAPES and room_shape not in BLOCKED_SHAPES:
+    if room_shape not in SUPPORTED_SHAPES:
         errors.append(
             _issue(
                 "INVALID_ROOM_SHAPE",
@@ -138,6 +176,33 @@ def validate_consult_request(request: ConsultRequest) -> Tuple[ConsultRequest, L
     elif room_shape == "круглая":
         _reasonable_dimension(dimensions.diameter, "dimensions.diameter", "Диаметр", errors)
         _reasonable_dimension(dimensions.height, "dimensions.height", "Высота", errors)
+    elif room_shape == "овальная":
+        _reasonable_dimension(dimensions.length, "dimensions.length", "Длина овала", errors)
+        _reasonable_dimension(dimensions.width, "dimensions.width", "Ширина овала", errors)
+        _reasonable_dimension(dimensions.height, "dimensions.height", "Высота", errors)
+        warnings.append(
+            _issue(
+                "OVAL_PERIMETER_APPROXIMATION",
+                "Периметр овальной формы рассчитывается приближённой формулой Рамануджана.",
+                "dimensions",
+                "warning",
+            )
+        )
+    elif room_shape == "сложная":
+        _reasonable_area(dimensions.manual_floor_area, "dimensions.manual_floor_area", "Измеренная площадь пола", errors)
+        _reasonable_perimeter(dimensions.manual_perimeter, "dimensions.manual_perimeter", "Измеренный периметр стен", errors)
+        _reasonable_dimension(dimensions.height, "dimensions.height", "Высота", errors)
+        _optional_positive_number(dimensions.manual_ceiling_area, "dimensions.manual_ceiling_area", "Площадь потолка", errors)
+        _optional_positive_number(dimensions.manual_wall_area, "dimensions.manual_wall_area", "Ручная чистая площадь стен", errors)
+        _optional_positive_number(dimensions.manual_baseboard_length, "dimensions.manual_baseboard_length", "Ручная длина плинтуса", errors)
+        warnings.append(
+            _issue(
+                "COMPLEX_GEOMETRY_MANUAL_MEASUREMENTS",
+                "Сложная форма считается по измеренным параметрам. Точность зависит от корректности замеров площади, периметра и проёмов.",
+                "dimensions",
+                "warning",
+            )
+        )
 
     for index, opening in enumerate(normalized.openings):
         _positive_number(opening.width, f"openings[{index}].width", "Ширина проёма", errors)

@@ -17,8 +17,15 @@ class Dimensions(BaseModel):
     width: Optional[float] = None
     height: Optional[float] = None
     diameter: Optional[float] = None
+
     manual_floor_area: Optional[float] = None
+    manual_ceiling_area: Optional[float] = None
+    use_floor_area_for_ceiling: bool = True
     manual_perimeter: Optional[float] = None
+    manual_wall_area: Optional[float] = None
+    manual_baseboard_length: Optional[float] = None
+    geometry_notes: Optional[str] = None
+
     segments: Optional[List[Dict[str, Any]]] = None
 
 
@@ -58,7 +65,7 @@ class UserGoals(BaseModel):
 
 
 class ConsultRequest(BaseModel):
-    # New Stage 7.2 contract
+    # Stage 7.2.2 contract
     room_type: Optional[str] = None
     zone_type: Optional[str] = None
     room_shape: Optional[str] = None
@@ -85,12 +92,6 @@ class ConsultRequest(BaseModel):
     question: Optional[str] = None
 
     def normalized(self) -> "ConsultRequest":
-        """
-        Return a contract-normalized copy.
-
-        This keeps the API backward-compatible while making all downstream code
-        use the Stage 7.2 structure.
-        """
         data = self.model_dump() if hasattr(self, "model_dump") else self.dict()
 
         room_shape = data.get("room_shape") or data.get("shape") or "прямоугольная"
@@ -152,7 +153,7 @@ class ValidationIssue(BaseModel):
 
 class ConsultationResponse(BaseModel):
     status: str
-    contract_version: str = "stage7.2"
+    contract_version: str = "stage7.2.2"
     metrics: Dict[str, Any]
     calculation: Dict[str, Any]
     answer: str
