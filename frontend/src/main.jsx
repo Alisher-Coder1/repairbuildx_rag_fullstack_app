@@ -324,9 +324,147 @@ function setupProgressiveConsultantUx() {
 }
 
 
+
+function getPreviousUxStepKey(currentKey) {
+  const index = PROGRESSIVE_CONSULTANT_STEPS.findIndex((step) => step.key === currentKey);
+  if (index <= 0) return "";
+  return PROGRESSIVE_CONSULTANT_STEPS[index - 1].key;
+}
+
+function findClosestCommonUxAncestor(firstNode, secondNode) {
+  if (!firstNode || !secondNode) return null;
+  const firstAncestors = [];
+  let node = firstNode;
+  while (node) {
+    firstAncestors.push(node);
+    node = node.parentElement;
+  }
+
+  node = secondNode;
+  while (node) {
+    if (firstAncestors.includes(node)) return node;
+    node = node.parentElement;
+  }
+
+  return null;
+}
+
+function setupProgressiveConsultantUxV2() {
+  if (typeof document === "undefined") return;
+
+  const stepCards = Array.from(document.querySelectorAll(".ux-step-card"));
+  if (!stepCards.length) return;
+
+  stepCards.forEach((card, index) => {
+    const stepKey = card.dataset.uxStepKey || "";
+    const step = PROGRESSIVE_CONSULTANT_STEPS.find((item) => item.key === stepKey) || PROGRESSIVE_CONSULTANT_STEPS[index];
+    if (!step) return;
+
+    card.classList.add("ux-step-card-v2");
+    card.dataset.uxTitle = step.title;
+
+    const oldHeading = card.querySelector(".ux-step-heading");
+    if (oldHeading) {
+      oldHeading.classList.add("ux-original-heading-hidden");
+    }
+
+    let header = card.querySelector(".ux-step-compact-header");
+    if (!header) {
+      header = document.createElement("button");
+      header.type = "button";
+      header.className = "ux-step-compact-header";
+      header.innerHTML = `
+        <span class="ux-step-compact-title">${step.title}</span>
+        <span class="ux-step-compact-status" aria-hidden="true"></span>
+        <span class="ux-step-compact-arrow" aria-hidden="true">⌄</span>
+      `;
+      card.prepend(header);
+
+      header.addEventListener("click", (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+
+        const isCollapsed = card.classList.contains("ux-collapsed");
+        if (isCollapsed) {
+          openUxStep(stepKey);
+        } else {
+          card.classList.add("ux-collapsed");
+          card.classList.remove("ux-open");
+        }
+      });
+    }
+
+    let actions = card.querySelector(".ux-step-actions");
+    if (!actions) {
+      actions = document.createElement("div");
+      actions.className = "ux-step-actions";
+      card.appendChild(actions);
+    }
+
+    const previousKey = getPreviousUxStepKey(stepKey);
+    const nextKey = getNextUxStepKey(stepKey);
+    actions.innerHTML = `
+      ${previousKey ? '<button type="button" class="ux-step-prev-button">Назад</button>' : ''}
+      ${nextKey ? '<button type="button" class="ux-step-next-button">Готово, следующий шаг</button>' : '<button type="button" class="ux-step-next-button">Готово, к консультации</button>'}
+    `;
+
+    actions.querySelector(".ux-step-prev-button")?.addEventListener("click", (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      markUxStepCompleted(card);
+      card.classList.add("ux-collapsed");
+      card.classList.remove("ux-open");
+      if (previousKey) openUxStep(previousKey);
+    });
+
+    actions.querySelector(".ux-step-next-button")?.addEventListener("click", (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      markUxStepCompleted(card);
+      card.classList.add("ux-collapsed");
+      card.classList.remove("ux-open");
+
+      if (nextKey) {
+        openUxStep(nextKey);
+      } else {
+        document.querySelector(".ux-consultant-panel")?.scrollIntoView({ block: "center", behavior: "smooth" });
+      }
+    });
+  });
+
+  const uxStepsParent = stepCards[0]?.parentElement;
+  if (
+    uxStepsParent &&
+    stepCards.length >= 2 &&
+    stepCards.every((card) => card.parentElement === uxStepsParent)
+  ) {
+    uxStepsParent.classList.add("ux-steps-grid", "ux-steps-grid-v2");
+  }
+
+  const consultantCard = findUxCardByText("Результат консультанта");
+  if (consultantCard) {
+    consultantCard.classList.add("ux-consultant-panel", "ux-consultant-panel-bottom");
+
+    const commonAncestor = findClosestCommonUxAncestor(uxStepsParent, consultantCard);
+    if (commonAncestor) {
+      commonAncestor.classList.add("ux-bottom-consultant-layout");
+    }
+
+    // Move the consultation/result panel below the user steps so the dialogue area
+    // can use the full available width instead of being squeezed on the right.
+    if (uxStepsParent && consultantCard.parentElement !== uxStepsParent.parentElement) {
+      uxStepsParent.insertAdjacentElement("afterend", consultantCard);
+    } else if (uxStepsParent && consultantCard.previousElementSibling !== uxStepsParent) {
+      uxStepsParent.insertAdjacentElement("afterend", consultantCard);
+    }
+  }
+}
+
+
 function App() {
   useEffect(() => {
     setupProgressiveConsultantUx();
+    setupProgressiveConsultantUxV2();
   });
 
   const [roomType, setRoomType] = useState("кухня");

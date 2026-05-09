@@ -702,3 +702,190 @@ details[hidden] {
   }
 }
 
+
+/* Stage 7.4.2: visible collapsed titles, back navigation, full-width consultation area */
+.ux-bottom-consultant-layout {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) !important;
+  gap: 18px !important;
+  align-items: start;
+}
+
+.ux-steps-grid-v2 {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(280px, 1fr)) !important;
+  gap: 14px !important;
+  align-items: start;
+  width: 100%;
+}
+
+.ux-steps-grid-v2 .ux-step-card-v2.ux-open {
+  grid-column: 1 / -1 !important;
+}
+
+.ux-step-card-v2 {
+  min-width: 0;
+}
+
+.ux-step-card-v2 .ux-original-heading-hidden {
+  display: none !important;
+}
+
+.ux-step-compact-header {
+  width: 100%;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 0;
+  margin: 0 0 12px 0;
+  text-align: left;
+  cursor: pointer;
+}
+
+.ux-step-compact-title {
+  display: block;
+  min-width: 0;
+  color: #0f172a;
+  font-size: 18px;
+  font-weight: 800;
+  line-height: 1.25;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.ux-step-compact-status {
+  flex: 0 0 auto;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.ux-step-card-v2[data-ux-completed="true"] .ux-step-compact-status::before {
+  content: "✓ заполнено";
+  display: inline-flex;
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: rgba(16, 185, 129, 0.12);
+  color: #047857;
+  line-height: 1;
+}
+
+.ux-step-compact-arrow {
+  flex: 0 0 auto;
+  color: #2563eb;
+  font-size: 20px;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.ux-step-card-v2.ux-open .ux-step-compact-arrow {
+  transform: rotate(180deg);
+}
+
+.ux-step-card-v2.ux-collapsed {
+  min-height: 72px !important;
+  max-height: none !important;
+  overflow: visible !important;
+  padding: 18px 20px !important;
+  display: block !important;
+  opacity: 1 !important;
+}
+
+.ux-step-card-v2.ux-collapsed > :not(.ux-step-compact-header) {
+  display: none !important;
+}
+
+.ux-step-card-v2.ux-collapsed::after {
+  display: none !important;
+}
+
+.ux-step-card-v2.ux-open {
+  padding: 20px !important;
+}
+
+.ux-step-card-v2.ux-open > :not(.ux-step-compact-header) {
+  display: revert;
+}
+
+.ux-step-card-v2 .ux-step-actions {
+  margin-top: 18px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.ux-step-prev-button,
+.ux-step-next-button {
+  border: 0;
+  border-radius: 12px;
+  padding: 10px 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.ux-step-prev-button {
+  background: #e2e8f0;
+  color: #0f172a;
+}
+
+.ux-step-next-button {
+  background: #2563eb;
+  color: #ffffff;
+}
+
+.ux-step-prev-button:hover,
+.ux-step-next-button:hover {
+  filter: brightness(0.96);
+}
+
+.ux-consultant-panel-bottom {
+  position: static !important;
+  grid-column: 1 / -1 !important;
+  width: 100% !important;
+  max-width: none !important;
+  max-height: none !important;
+  min-height: 420px;
+  overflow: visible !important;
+  margin-top: 4px;
+}
+
+.ux-consultant-panel-bottom textarea,
+.ux-consultant-panel-bottom pre,
+.ux-consultant-panel-bottom [class*="answer"],
+.ux-consultant-panel-bottom [class*="result"] {
+  max-height: none;
+}
+
+@media (max-width: 1180px) {
+  .ux-steps-grid-v2 {
+    grid-template-columns: 1fr !important;
+  }
+
+  .ux-steps-grid-v2 .ux-step-card-v2.ux-open {
+    grid-column: auto !important;
+  }
+}
+
+@media (max-width: 640px) {
+  .ux-step-compact-header {
+    align-items: flex-start;
+  }
+
+  .ux-step-compact-title {
+    font-size: 16px;
+  }
+
+  .ux-step-card-v2 .ux-step-actions {
+    justify-content: stretch;
+  }
+
+  .ux-step-prev-button,
+  .ux-step-next-button {
+    width: 100%;
+  }
+}
+
