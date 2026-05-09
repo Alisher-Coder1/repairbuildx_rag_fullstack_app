@@ -923,16 +923,26 @@ function togglePriority(priority) {
 
       <div className="layout">
         <form className="form-panel" onSubmit={(e) => e.preventDefault()}>
-          <Section title="1. Помещение" subtitle="Разделяем тип помещения, зону эксплуатации и геометрию.">
+          <Section title="1. Помещение и контекст" subtitle="Тип помещения, зона эксплуатации и исходное состояние ремонта задаются в одном первом шаге.">
             <div className="grid two">
               <SelectField label="Тип помещения" value={roomType} options={ROOM_TYPE_OPTIONS} onChange={updateRoomType} />
               <SelectField label="Зона эксплуатации" value={zoneType} options={ZONE_OPTIONS} onChange={(value) => { setZoneType(value); setZoneChangedManually(value !== defaultZone); }} hint={`Рекомендуемая зона: ${defaultZone}`} />
               <SelectField label="Форма помещения" value={roomShape} options={SHAPE_OPTIONS} onChange={setRoomShape} />
             </div>
             {uiWarnings.length ? <div className="warning-box">{uiWarnings.map((w) => <p key={w}>{w}</p>)}</div> : null}
-          </Section>
+          
 
-          <Section title="2. Размеры и геометрия" subtitle="Овал, Г-образная, П-образная, треугольная и волнистая формы вводятся через сложную форму.">
+            <div className="stage-subblock">
+              <h3>Контекст ремонта</h3>
+              <p className="stage-subblock-note">Состояние помещения и уровень ремонта влияют на состав работ, риски, подготовку основания и глубину консультации.</p>
+              <div className="grid three">
+              <SelectField label="Состояние помещения" value={repairContext.property_condition} options={PROPERTY_CONDITIONS} onChange={(v) => setRepairContext((c) => ({ ...c, property_condition: v }))} />
+              <SelectField label="Уровень ремонта" value={repairContext.repair_level} options={REPAIR_LEVELS} onChange={(v) => setRepairContext((c) => ({ ...c, repair_level: v }))} />
+              <label className="checkbox-line top-space"><input type="checkbox" checked={repairContext.has_existing_finish} onChange={(e) => setRepairContext((c) => ({ ...c, has_existing_finish: e.target.checked }))} /> Есть существующая отделка</label>
+            </div>
+            </div>
+          </Section>
+<Section title="2. Геометрия" subtitle="Площадь, периметр, высота, сложный контур и проёмы формируют расчётную базу.">
             {roomShape === "прямоугольная" ? (
               <div className="grid three">
                 <NumberField label="Длина, м" value={dimensions.length} onChange={(v) => updateDimension("length", v)} />
@@ -1006,12 +1016,31 @@ function togglePriority(priority) {
                 ) : null}
               </>
             ) : null}
-          </Section>
-
           
-          <Section
+
+            <div className="stage-subblock">
+              <h3>Проёмы и вычеты</h3>
+              <p className="stage-subblock-note">Проёмы уменьшают чистую площадь стен и влияют на откосы, доборы, примыкания и будущую смету.</p>
+              <div className="grid four">
+              <SelectField label="Тип проёма" value={draftOpening.type} options={OPENING_TYPES} onChange={(v) => setDraftOpening((c) => ({ ...c, type: v }))} />
+              <NumberField label="Ширина, м" value={draftOpening.width} onChange={(v) => setDraftOpening((c) => ({ ...c, width: v }))} />
+              <NumberField label="Высота, м" value={draftOpening.height} onChange={(v) => setDraftOpening((c) => ({ ...c, height: v }))} />
+              <NumberField label="Количество" value={draftOpening.count} onChange={(v) => setDraftOpening((c) => ({ ...c, count: v }))} step="1" />
+            </div>
+            <button type="button" className="secondary-button" onClick={addOpening}>Добавить проём</button>
+            <div className="opening-list">
+              {openings.map((o, index) => (
+                <div className="opening-item" key={`${o.type}-${index}`}>
+                  <span>{o.type}: {o.width} × {o.height} м · {o.count} шт.</span>
+                  <button type="button" onClick={() => removeOpening(index)}>удалить</button>
+                </div>
+              ))}
+            </div>
+            </div>
+          </Section>
+<Section
             title="3. Что будет в помещении / объекты"
-            subtitle="Выберите понятные бытовые объекты. Система сама разложит их на черновой, предчистовой и чистовой этапы."
+            subtitle="Выберите объекты ремонта. Система распределит их по черновому, предчистовому и чистовому этапам."
           >
             <div className="stage-logic-note">
               Объект не принадлежит одному этапу. Например, розетка: кабель и подрозетник — черновой этап,
@@ -1033,26 +1062,35 @@ function togglePriority(priority) {
               ))}
             </div>
           </Section>
+<Section title="4. Черновой этап / инженерная подготовка"
+            subtitle="Скрытые работы: электрика, сантехника, вентиляция, отопление, гидроизоляция и выводы до закрытия отделкой."
+          >
+            <div className="stage-logic-note">На этом этапе фиксируются скрытые работы. Ответы пользователя дают системе понимание, какие выводы, кабели, трубы, каналы, проверки и подготовительные материалы нужны до предчистовой отделки.</div>
 
-<Section title="3. Проёмы" subtitle="Ввод через UI вместо обязательного JSON.">
-            <div className="grid four">
-              <SelectField label="Тип проёма" value={draftOpening.type} options={OPENING_TYPES} onChange={(v) => setDraftOpening((c) => ({ ...c, type: v }))} />
-              <NumberField label="Ширина, м" value={draftOpening.width} onChange={(v) => setDraftOpening((c) => ({ ...c, width: v }))} />
-              <NumberField label="Высота, м" value={draftOpening.height} onChange={(v) => setDraftOpening((c) => ({ ...c, height: v }))} />
-              <NumberField label="Количество" value={draftOpening.count} onChange={(v) => setDraftOpening((c) => ({ ...c, count: v }))} step="1" />
+            <div className="grid three">
+              {Object.entries(engineering).map(([key, value]) => <SelectField key={key} label={getUiLabel(key)} value={value} options={YES_NO_UNKNOWN} onChange={(v) => updateEngineering(key, v)} />)}
             </div>
-            <button type="button" className="secondary-button" onClick={addOpening}>Добавить проём</button>
-            <div className="opening-list">
-              {openings.map((o, index) => (
-                <div className="opening-item" key={`${o.type}-${index}`}>
-                  <span>{o.type}: {o.width} × {o.height} м · {o.count} шт.</span>
-                  <button type="button" onClick={() => removeOpening(index)}>удалить</button>
-                </div>
+          </Section>
+<Section title="5. Предчистовой этап / требования к качеству"
+            subtitle="Уточняет требования к качеству, долговечности, скорости, стоимости, влагостойкости, звукоизоляции и подготовке поверхности."
+          >
+            <div className="stage-logic-note">Этот этап влияет на подготовку основания: выравнивание, шпаклёвку, грунтовку, гидроизоляцию, технологические паузы и контроль качества перед финишными покрытиями.</div>
+
+            <div className="grid two">
+              <SelectField label="Бюджет" value={userGoals.budget_level} options={BUDGET_LEVELS} onChange={(v) => setUserGoals((c) => ({ ...c, budget_level: v }))} />
+              <TextField label="Дополнительные пожелания" value={userGoals.notes} onChange={(v) => setUserGoals((c) => ({ ...c, notes: v }))} />
+            </div>
+            <div className="chips">
+              {PRIORITIES.map((p) => (
+                <label className={`chip ${userGoals.priority.includes(p) ? "selected" : ""}`} key={p}>
+                  <input type="checkbox" checked={userGoals.priority.includes(p)} onChange={() => togglePriority(p)} /> {p}
+                </label>
               ))}
             </div>
           </Section>
+<Section title="6. Чистовой этап / покрытия" subtitle="Выбор видимых покрытий пола, стен и потолка. Покрытие определяет финишные материалы, операции и требования к основанию.">
+            <div className="stage-logic-note">Финишные покрытия нельзя считать отдельно от основания: ламинат зависит от ровности пола, краска — от качества шпаклёвки, плитка — от геометрии, клея, гидроизоляции и швов.</div>
 
-          <Section title="4. Поверхности" subtitle="Пол, стены и потолок имеют отдельные свойства.">
             <div className="surface-card">
               <h3>Пол</h3>
               <div className="grid two">
@@ -1083,40 +1121,32 @@ function togglePriority(priority) {
               </div>
             </div>
           </Section>
+<Section title="7. Итог и консультация"
+            subtitle="После заполнения этапов пользователь получает расчёт, консультацию, этапы работ и возможность продолжить диалог."
+          >
+            <div className="stage-logic-note">Здесь пользователь задаёт уточняющий вопрос. Расчёт остаётся ниже как раскрываемый результат, а консультация должна объяснять этапы, материалы, риски и следующий безопасный шаг.</div>
 
-          <Section title="5. Контекст ремонта">
-            <div className="grid three">
-              <SelectField label="Состояние помещения" value={repairContext.property_condition} options={PROPERTY_CONDITIONS} onChange={(v) => setRepairContext((c) => ({ ...c, property_condition: v }))} />
-              <SelectField label="Уровень ремонта" value={repairContext.repair_level} options={REPAIR_LEVELS} onChange={(v) => setRepairContext((c) => ({ ...c, repair_level: v }))} />
-              <label className="checkbox-line top-space"><input type="checkbox" checked={repairContext.has_existing_finish} onChange={(e) => setRepairContext((c) => ({ ...c, has_existing_finish: e.target.checked }))} /> Есть существующая отделка</label>
-            </div>
-          </Section>
-
-          <Section title="6. Инженерные системы">
-            <div className="grid three">
-              {Object.entries(engineering).map(([key, value]) => <SelectField key={key} label={getUiLabel(key)} value={value} options={YES_NO_UNKNOWN} onChange={(v) => updateEngineering(key, v)} />)}
-            </div>
-          </Section>
-
-          <Section title="7. Требования пользователя">
-            <div className="grid two">
-              <SelectField label="Бюджет" value={userGoals.budget_level} options={BUDGET_LEVELS} onChange={(v) => setUserGoals((c) => ({ ...c, budget_level: v }))} />
-              <TextField label="Дополнительные пожелания" value={userGoals.notes} onChange={(v) => setUserGoals((c) => ({ ...c, notes: v }))} />
-            </div>
-            <div className="chips">
-              {PRIORITIES.map((p) => (
-                <label className={`chip ${userGoals.priority.includes(p) ? "selected" : ""}`} key={p}>
-                  <input type="checkbox" checked={userGoals.priority.includes(p)} onChange={() => togglePriority(p)} /> {p}
-                </label>
-              ))}
-            </div>
-          </Section>
-
-          <Section title="8. Вопрос консультанту">
             <textarea value={userQuestion} onChange={(e) => setUserQuestion(e.target.value)} rows={4} />
             <button type="button" className="primary-button" onClick={submitConsultation} disabled={isLoading}>{isLoading ? "Формируется консультация..." : "Сформировать консультацию"}</button>
             {error ? <div className="error-box">{error}</div> : null}
           </Section>
+
+          
+
+          
+          
+
+
+
+          
+
+          
+
+          
+
+          
+
+          
         </form>
 
         <aside className="result-panel">

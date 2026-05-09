@@ -1224,3 +1224,46 @@ details[hidden] {
   }
 }
 
+
+/* Stage 7.5 UI flow rebuild v2 */
+.stage-subblock {
+  margin-top: 18px;
+  padding: 16px;
+  border-radius: 18px;
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  background: rgba(248, 250, 252, 0.9);
+}
+
+.stage-subblock h3 {
+  margin: 0 0 10px 0;
+  color: #0f172a;
+  font-size: 17px;
+  font-weight: 900;
+}
+
+.stage-subblock-note {
+  margin: 0 0 12px 0;
+  color: #475569;
+  line-height: 1.45;
+  font-size: 14px;
+}
+
+.stage-logic-note {
+  margin: 12px 0 16px 0;
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(132, 204, 22, 0.35);
+  background: rgba(247, 254, 231, 0.8);
+  color: #365314;
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.stage-nav button,
+.stage-chip,
+.step-chip,
+.step-tab {
+  text-align: center;
+  justify-content: center;
+}
+
