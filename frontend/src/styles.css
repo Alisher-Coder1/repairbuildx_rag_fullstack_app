@@ -1144,3 +1144,83 @@ details[hidden] {
   }
 }
 
+
+/* Stage 7.5: Repair Object Lifecycle Wizard */
+.stage-logic-note {
+  margin: 12px 0 16px 0;
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(59, 130, 246, 0.2);
+  background: rgba(239, 246, 255, 0.8);
+  color: #1e3a8a;
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.repair-object-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(240px, 1fr));
+  gap: 14px;
+}
+
+.repair-object-group {
+  border: 1px solid rgba(148, 163, 184, 0.32);
+  border-radius: 18px;
+  padding: 14px;
+  background: rgba(255, 255, 255, 0.78);
+}
+
+.repair-object-group h3 {
+  margin: 0 0 10px 0;
+  color: #0f172a;
+  font-size: 16px;
+  font-weight: 800;
+  text-align: center;
+}
+
+.repair-object-card {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 8px 10px;
+  align-items: start;
+  padding: 11px;
+  border: 1px solid rgba(148, 163, 184, 0.38);
+  border-radius: 14px;
+  background: #ffffff;
+  cursor: pointer;
+  margin-bottom: 8px;
+  transition: border-color 160ms ease, background 160ms ease, transform 160ms ease;
+}
+
+.repair-object-card:hover {
+  border-color: rgba(37, 99, 235, 0.5);
+  background: rgba(239, 246, 255, 0.75);
+}
+
+.repair-object-card.selected {
+  border-color: rgba(16, 185, 129, 0.55);
+  background: rgba(236, 253, 245, 0.88);
+}
+
+.repair-object-card input {
+  margin-top: 3px;
+}
+
+.repair-object-title {
+  color: #0f172a;
+  font-weight: 800;
+  line-height: 1.25;
+}
+
+.repair-object-card small {
+  grid-column: 2 / -1;
+  color: #64748b;
+  line-height: 1.35;
+}
+
+@media (max-width: 880px) {
+  .repair-object-grid {
+    grid-template-columns: 1fr;
+  }
+}
+

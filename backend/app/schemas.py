@@ -85,6 +85,7 @@ class ConsultRequest(BaseModel):
     dimensions: Optional[Dimensions] = None
     openings: List[Opening] = Field(default_factory=list)
     wall_segments: List[WallSegment] = Field(default_factory=list)
+    selected_objects: List[str] = Field(default_factory=list)
     surface_specs: Optional[SurfaceSpecs] = None
     repair_context: Optional[RepairContext] = None
     engineering: Optional[Engineering] = None
@@ -150,6 +151,7 @@ class ConsultRequest(BaseModel):
             dimensions=Dimensions(**dimensions),
             openings=[Opening(**item) if isinstance(item, dict) else item for item in data.get("openings", [])],
             wall_segments=[WallSegment(**item) if isinstance(item, dict) else item for item in data.get("wall_segments", [])],
+            selected_objects=data.get("selected_objects") or [],
             surface_specs=SurfaceSpecs(**surface_specs),
             repair_context=RepairContext(**(data.get("repair_context") or {})),
             engineering=Engineering(**(data.get("engineering") or {})),

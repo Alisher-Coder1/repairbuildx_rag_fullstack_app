@@ -27,6 +27,28 @@ const YES_NO_UNKNOWN = ["yes", "no", "unknown", "auto"];
 const PROPERTY_CONDITIONS = ["новостройка без отделки", "черновая отделка", "предчистовая отделка", "старая отделка", "после демонтажа", "неизвестно"];
 const REPAIR_LEVELS = ["косметический", "капитальный", "частичный", "под ключ", "только расчёт материалов", "только консультация"];
 const BUDGET_LEVELS = ["эконом", "средний", "премиум", "не указан"];
+
+const REPAIR_OBJECT_OPTIONS = [
+  { group: "Сантехника", options: [["toilet_floor", "Унитаз напольный"], ["toilet_wall_hung", "Подвесной унитаз / инсталляция"], ["sink", "Раковина / умывальник"], ["shower", "Душевая зона"]] },
+  { group: "Электрика и свет", options: [["socket", "Розетки"], ["ceiling_light", "Потолочное освещение"]] },
+  { group: "Вентиляция и отопление", options: [["ventilation_fan", "Вентиляция / вентилятор"], ["warm_floor", "Тёплый пол"]] },
+  { group: "Финишные покрытия", options: [["laminate_floor", "Ламинат"], ["tile", "Плитка / керамогранит"], ["paint", "Краска"]] },
+];
+
+const REPAIR_OBJECT_LIFECYCLE_HINTS = {
+  toilet_floor: "Черновой: вывод воды и канализации. Чистовой: установка и проверка унитаза.",
+  toilet_wall_hung: "Черновой: инсталляция и выводы. Предчистовой: зашивка и плитка. Чистовой: чаша и кнопка.",
+  sink: "Черновой: выводы воды и канализации. Чистовой: раковина, смеситель, сифон.",
+  shower: "Черновой: выводы, трап, уклоны. Предчистовой: гидроизоляция. Чистовой: душевая система.",
+  socket: "Черновой: кабель и подрозетник. Предчистовой: заделка. Чистовой: механизм и рамка.",
+  ceiling_light: "Черновой: кабель и выводы. Предчистовой: отверстия/закладные. Чистовой: светильники.",
+  ventilation_fan: "Черновой: канал и питание. Предчистовой: короб/отверстие. Чистовой: решётка или вентилятор.",
+  warm_floor: "Черновой: система и датчик. Предчистовой: закрытие/стяжка. Чистовой: терморегулятор.",
+  laminate_floor: "Черновой: проверка основания. Предчистовой: подготовка пола. Чистовой: ламинат, подложка, плинтус.",
+  tile: "Черновой: основание и гидроизоляция. Предчистовой: подготовка. Чистовой: плитка, клей, затирка.",
+  paint: "Черновой: основание. Предчистовой: шпаклёвка и шлифовка. Чистовой: окраска.",
+};
+
 const PRIORITIES = ["долговечность", "быстро", "дешево", "влагостойкость", "звукоизоляция", "теплоизоляция", "простота ухода", "минимум сложных работ", "визуальный дизайн"];
 const OPENING_TYPES = ["дверь", "окно", "арка", "ниша"];
 
@@ -159,11 +181,11 @@ function TextField({ label, value, onChange, hint, placeholder }) {
 const PROGRESSIVE_CONSULTANT_STEPS = [
   { key: "room", title: "1. Помещение", short: "Помещение" },
   { key: "geometry", title: "2. Размеры", short: "Размеры" },
-  { key: "openings", title: "3. Проёмы", short: "Проёмы" },
-  { key: "surfaces", title: "4. Поверхности", short: "Поверхности" },
-  { key: "context", title: "5. Контекст ремонта", short: "Контекст" },
-  { key: "engineering", title: "6. Инженерные системы", short: "Инженерия" },
-  { key: "requirements", title: "7. Требования пользователя", short: "Требования" },
+  { key: "objects", title: "3. Что будет в помещении / объекты", short: "Объекты" },
+  { key: "rough", title: "4. Черновой этап / инженерная подготовка", short: "Черновой" },
+  { key: "prefinish", title: "5. Предчистовой этап", short: "Предчистовой" },
+  { key: "finish", title: "6. Чистовой этап / покрытия", short: "Чистовой" },
+  { key: "result", title: "7. Итог и консультация", short: "Итог" },
   { key: "question", title: "8. Вопрос консультанту", short: "Вопрос" },
 ];
 
@@ -707,7 +729,9 @@ function App() {
 
   const [repairContext, setRepairContext] = useState({ property_condition: "черновая отделка", repair_level: "капитальный", has_existing_finish: false });
   const [engineering, setEngineering] = useState(getDefaultEngineering("кухня"));
-  const [userGoals, setUserGoals] = useState({ budget_level: "средний", priority: ["долговечность", "простота ухода"], notes: "Нужен практичный ремонт без лишних дорогих решений." });
+    const [selectedObjects, setSelectedObjects] = useState(["socket", "ceiling_light"]);
+
+const [userGoals, setUserGoals] = useState({ budget_level: "средний", priority: ["долговечность", "простота ухода"], notes: "Нужен практичный ремонт без лишних дорогих решений." });
   const [userQuestion, setUserQuestion] = useState("Подготовь базовую консультацию и расчёт для ремонта помещения.");
   const [result, setResult] = useState(null);
   const [error, setError] = useState("");
@@ -761,6 +785,7 @@ function App() {
     dimensions: normalizedDimensions,
     openings: normalizedOpenings,
     wall_segments: roomShape === "сложная" && geometryMode === "wall_segments" ? normalizedWallSegments : [],
+      selected_objects: selectedObjects,
     surface_specs: surfaceSpecs,
     repair_context: repairContext,
     engineering,
@@ -831,7 +856,15 @@ function App() {
     setWallSegments((current) => current.filter((_, i) => i !== index));
   }
 
-  function togglePriority(priority) {
+  
+  function toggleSelectedObject(objectCode) {
+    setSelectedObjects((current) => {
+      const exists = current.includes(objectCode);
+      return exists ? current.filter((item) => item !== objectCode) : [...current, objectCode];
+    });
+  }
+
+function togglePriority(priority) {
     setUserGoals((current) => ({
       ...current,
       priority: current.priority.includes(priority)
@@ -975,7 +1008,33 @@ function App() {
             ) : null}
           </Section>
 
-          <Section title="3. Проёмы" subtitle="Ввод через UI вместо обязательного JSON.">
+          
+          <Section
+            title="3. Что будет в помещении / объекты"
+            subtitle="Выберите понятные бытовые объекты. Система сама разложит их на черновой, предчистовой и чистовой этапы."
+          >
+            <div className="stage-logic-note">
+              Объект не принадлежит одному этапу. Например, розетка: кабель и подрозетник — черновой этап,
+              заделка штробы — предчистовой, механизм и рамка — чистовой.
+            </div>
+
+            <div className="repair-object-grid">
+              {REPAIR_OBJECT_OPTIONS.map((group) => (
+                <div className="repair-object-group" key={group.group}>
+                  <h3>{group.group}</h3>
+                  {group.options.map(([code, label]) => (
+                    <label className={`repair-object-card ${selectedObjects.includes(code) ? "selected" : ""}`} key={code}>
+                      <input type="checkbox" checked={selectedObjects.includes(code)} onChange={() => toggleSelectedObject(code)} />
+                      <span className="repair-object-title">{label}</span>
+                      <small>{REPAIR_OBJECT_LIFECYCLE_HINTS[code]}</small>
+                    </label>
+                  ))}
+                </div>
+              ))}
+            </div>
+          </Section>
+
+<Section title="3. Проёмы" subtitle="Ввод через UI вместо обязательного JSON.">
             <div className="grid four">
               <SelectField label="Тип проёма" value={draftOpening.type} options={OPENING_TYPES} onChange={(v) => setDraftOpening((c) => ({ ...c, type: v }))} />
               <NumberField label="Ширина, м" value={draftOpening.width} onChange={(v) => setDraftOpening((c) => ({ ...c, width: v }))} />
