@@ -48,7 +48,7 @@ const ZONE_OPTIONS = [
   "техническая зона",
 ];
 
-const SHAPE_OPTIONS = ["прямоугольная", "круглая", "Г-образная", "сложная"];
+const SHAPE_OPTIONS = ["прямоугольная", "круглая", "овальная", "сложная"];
 
 const FLOOR_COVERINGS = [
   "ламинат",
@@ -134,6 +134,15 @@ function roundNumber(value) {
 function asNumber(value) {
   const number = Number(String(value).replace(",", "."));
   return Number.isFinite(number) ? number : 0;
+}
+
+function optionalNumber(value) {
+  if (value === null || value === undefined || String(value).trim() === "") {
+    return null;
+  }
+
+  const number = Number(String(value).replace(",", "."));
+  return Number.isFinite(number) ? number : null;
 }
 
 function getDefaultEngineering(roomType) {
@@ -252,8 +261,13 @@ function App() {
     width: "4",
     height: "2.8",
     diameter: "6",
-    manual_floor_area: "",
-    manual_perimeter: "",
+    manual_floor_area: "20",
+    manual_ceiling_area: "",
+    use_floor_area_for_ceiling: true,
+    manual_perimeter: "18",
+    manual_wall_area: "",
+    manual_baseboard_length: "",
+    geometry_notes: "Нестандартный контур: использовать измеренную площадь и периметр.",
   });
 
   const [openings, setOpenings] = useState([
@@ -329,16 +343,30 @@ function App() {
       };
     }
 
-    if (roomShape === "сложная") {
+    if (roomShape === "овальная") {
       return {
-        manual_floor_area: asNumber(dimensions.manual_floor_area),
-        manual_perimeter: asNumber(dimensions.manual_perimeter),
+        length: asNumber(dimensions.length),
+        width: asNumber(dimensions.width),
         height: asNumber(dimensions.height),
       };
     }
 
+    if (roomShape === "сложная") {
+      return {
+        manual_floor_area: asNumber(dimensions.manual_floor_area),
+        manual_ceiling_area: dimensions.use_floor_area_for_ceiling
+          ? null
+          : optionalNumber(dimensions.manual_ceiling_area),
+        use_floor_area_for_ceiling: Boolean(dimensions.use_floor_area_for_ceiling),
+        manual_perimeter: asNumber(dimensions.manual_perimeter),
+        height: asNumber(dimensions.height),
+        manual_wall_area: optionalNumber(dimensions.manual_wall_area),
+        manual_baseboard_length: optionalNumber(dimensions.manual_baseboard_length),
+        geometry_notes: dimensions.geometry_notes,
+      };
+    }
+
     return {
-      segments: [],
       height: asNumber(dimensions.height),
     };
   }, [dimensions, roomShape]);
@@ -388,8 +416,8 @@ function App() {
       ...payload,
       shape: roomShape,
       zone: zoneType,
-      length: normalizedDimensions.length ?? normalizedDimensions.diameter ?? 0,
-      width: normalizedDimensions.width ?? normalizedDimensions.diameter ?? 0,
+      length: normalizedDimensions.length ?? normalizedDimensions.diameter ?? normalizedDimensions.manual_floor_area ?? 0,
+      width: normalizedDimensions.width ?? normalizedDimensions.diameter ?? normalizedDimensions.manual_perimeter ?? 0,
       height: normalizedDimensions.height ?? 0,
       floor_covering: surfaceSpecs.floor.covering,
       wall_covering: surfaceSpecs.walls.covering,
@@ -457,17 +485,6 @@ function App() {
   async function submitConsultation() {
     setError("");
     setResult(null);
-
-    if (roomShape === "Г-образная") {
-      setError("Г-образная форма пока не отправляется в расчёт: нужен отдельный backend geometry engine.");
-      return;
-    }
-
-    if (roomShape === "сложная") {
-      setError("Сложная форма пока не отправляется в расчёт: нужен manual geometry contract на backend.");
-      return;
-    }
-
     setIsLoading(true);
 
     try {
@@ -513,18 +530,18 @@ function App() {
   if (zoneChangedManually && zoneType !== defaultZone) {
     uiWarnings.push("Зона изменена вручную. Проверьте соответствие условиям эксплуатации.");
   }
-  if (roomShape === "круглая") {
-    uiWarnings.push("Круглая форма требует backend geometry engine. UI готовит правильные поля: диаметр + высота.");
+  if (roomShape === "овальная") {
+    uiWarnings.push("Для овальной формы периметр считается приближённой инженерной формулой.");
   }
-  if (roomShape === "Г-образная" || roomShape === "сложная") {
-    uiWarnings.push("Эта форма не должна считаться по прямоугольной формуле. Для неё нужен отдельный контракт.");
+  if (roomShape === "сложная") {
+    uiWarnings.push("Сложная форма считается по измеренным параметрам. Точность зависит от корректности площади, периметра, высоты и проёмов.");
   }
 
   return (
     <main className="app-shell">
       <header className="hero">
         <div>
-          <p className="eyebrow">Stage 7.1 · UI Contract Restoration</p>
+          <p className="eyebrow">Stage 7.2.2 · Flexible Geometry Contract</p>
           <h1>AI-консультант по ремонту помещения</h1>
           <p className="hero-text">
             Интерфейс восстановлен под production-логику: тип помещения, зона,
@@ -617,24 +634,17 @@ function App() {
               </div>
             ) : null}
 
-            {roomShape === "Г-образная" ? (
-              <div className="unsupported-box">
-                Г-образная форма зафиксирована как future. Нельзя считать её через
-                длина × ширина. Следующий backend-этап должен добавить расчёт по сегментам.
-              </div>
-            ) : null}
-
-            {roomShape === "сложная" ? (
+            {roomShape === "овальная" ? (
               <div className="grid three">
                 <NumberField
-                  label="Площадь пола вручную, м²"
-                  value={dimensions.manual_floor_area}
-                  onChange={(value) => updateDimension("manual_floor_area", value)}
+                  label="Длина овала / большая ось, м"
+                  value={dimensions.length}
+                  onChange={(value) => updateDimension("length", value)}
                 />
                 <NumberField
-                  label="Периметр вручную, м"
-                  value={dimensions.manual_perimeter}
-                  onChange={(value) => updateDimension("manual_perimeter", value)}
+                  label="Ширина овала / малая ось, м"
+                  value={dimensions.width}
+                  onChange={(value) => updateDimension("width", value)}
                 />
                 <NumberField
                   label="Высота, м"
@@ -642,6 +652,77 @@ function App() {
                   onChange={(value) => updateDimension("height", value)}
                 />
               </div>
+            ) : null}
+
+            {roomShape === "сложная" ? (
+              <>
+                <div className="unsupported-box">
+                  Сложная форма покрывает Г-образные, П-образные, помещения с нишами,
+                  эркерами, срезанными углами, колоннами и нестандартным контуром.
+                  Расчёт строится по измеренной площади, периметру, высоте и проёмам.
+                </div>
+
+                <div className="grid three">
+                  <NumberField
+                    label="Измеренная площадь пола, м²"
+                    value={dimensions.manual_floor_area}
+                    onChange={(value) => updateDimension("manual_floor_area", value)}
+                  />
+                  <NumberField
+                    label="Измеренный периметр стен, м"
+                    value={dimensions.manual_perimeter}
+                    onChange={(value) => updateDimension("manual_perimeter", value)}
+                  />
+                  <NumberField
+                    label="Высота, м"
+                    value={dimensions.height}
+                    onChange={(value) => updateDimension("height", value)}
+                  />
+                </div>
+
+                <div className="grid two">
+                  <label className="checkbox-line top-space">
+                    <input
+                      type="checkbox"
+                      checked={dimensions.use_floor_area_for_ceiling}
+                      onChange={(event) =>
+                        updateDimension("use_floor_area_for_ceiling", event.target.checked)
+                      }
+                    />
+                    Потолок равен площади пола
+                  </label>
+
+                  {!dimensions.use_floor_area_for_ceiling ? (
+                    <NumberField
+                      label="Измеренная площадь потолка, м²"
+                      value={dimensions.manual_ceiling_area}
+                      onChange={(value) => updateDimension("manual_ceiling_area", value)}
+                    />
+                  ) : null}
+                </div>
+
+                <div className="grid two">
+                  <NumberField
+                    label="Чистая площадь стен вручную, м²"
+                    value={dimensions.manual_wall_area}
+                    onChange={(value) => updateDimension("manual_wall_area", value)}
+                    hint="Необязательно. Если пусто, backend посчитает периметр × высота − проёмы."
+                  />
+                  <NumberField
+                    label="Длина плинтуса вручную, м.пог."
+                    value={dimensions.manual_baseboard_length}
+                    onChange={(value) => updateDimension("manual_baseboard_length", value)}
+                    hint="Необязательно. Если пусто, используется периметр."
+                  />
+                </div>
+
+                <TextField
+                  label="Описание сложной формы"
+                  value={dimensions.geometry_notes}
+                  onChange={(value) => updateDimension("geometry_notes", value)}
+                  placeholder="Например: Г-образная комната с нишей у входа"
+                />
+              </>
             ) : null}
           </Section>
 
@@ -897,7 +978,7 @@ function App() {
         <aside className="result-panel">
           <Section
             title="Результат консультанта"
-            subtitle="Backend принимает Stage 7.2 contract: прямоугольная и круглая геометрия считаются разными формулами."
+            subtitle="Backend принимает Stage 7.2.2 contract: прямоугольная, круглая, овальная и сложная геометрия считаются разными способами."
           >
             {result ? (
               <>
@@ -985,7 +1066,7 @@ function App() {
             )}
           </Section>
 
-          <Section title="Payload preview" subtitle="Stage 7.2 contract, который отправляется в backend.">
+          <Section title="Payload preview" subtitle="Stage 7.2.2 contract, который отправляется в backend.">
             <pre className="payload-preview">{JSON.stringify(payload, null, 2)}</pre>
           </Section>
         </aside>

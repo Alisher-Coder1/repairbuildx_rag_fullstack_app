@@ -17,6 +17,10 @@ def _opening_area(request: ConsultRequest) -> float:
     )
 
 
+def _oval_perimeter_ramanujan(a: float, b: float) -> float:
+    return math.pi * (3 * (a + b) - math.sqrt((3 * a + b) * (a + 3 * b)))
+
+
 def calculate_room_metrics(request: ConsultRequest) -> Dict[str, Any]:
     dimensions = request.dimensions
     if dimensions is None:
@@ -32,6 +36,10 @@ def calculate_room_metrics(request: ConsultRequest) -> Dict[str, Any]:
         floor_area = length * width
         ceiling_area = floor_area
         perimeter = 2 * (length + width)
+        walls_gross_area = perimeter * height
+        openings_area = _opening_area(request)
+        walls_net_area = max(walls_gross_area - openings_area, 0)
+        plinth_length = perimeter
 
         formula = {
             "shape": "rectangle",
@@ -39,6 +47,7 @@ def calculate_room_metrics(request: ConsultRequest) -> Dict[str, Any]:
             "ceiling_area": "length * width",
             "perimeter": "2 * (length + width)",
             "walls_gross_area": "perimeter * height",
+            "walls_net_area": "walls_gross_area - openings_area",
         }
 
     elif shape == "круглая":
@@ -49,6 +58,10 @@ def calculate_room_metrics(request: ConsultRequest) -> Dict[str, Any]:
         floor_area = math.pi * radius * radius
         ceiling_area = floor_area
         perimeter = math.pi * diameter
+        walls_gross_area = perimeter * height
+        openings_area = _opening_area(request)
+        walls_net_area = max(walls_gross_area - openings_area, 0)
+        plinth_length = perimeter
 
         formula = {
             "shape": "circle",
@@ -56,15 +69,67 @@ def calculate_room_metrics(request: ConsultRequest) -> Dict[str, Any]:
             "ceiling_area": "π * (diameter / 2)^2",
             "perimeter": "π * diameter",
             "walls_gross_area": "perimeter * height",
+            "walls_net_area": "walls_gross_area - openings_area",
+        }
+
+    elif shape == "овальная":
+        length = float(dimensions.length)
+        width = float(dimensions.width)
+        height = float(dimensions.height)
+        a = length / 2
+        b = width / 2
+
+        floor_area = math.pi * a * b
+        ceiling_area = floor_area
+        perimeter = _oval_perimeter_ramanujan(a, b)
+        walls_gross_area = perimeter * height
+        openings_area = _opening_area(request)
+        walls_net_area = max(walls_gross_area - openings_area, 0)
+        plinth_length = perimeter
+
+        formula = {
+            "shape": "oval",
+            "floor_area": "π * (length / 2) * (width / 2)",
+            "ceiling_area": "π * (length / 2) * (width / 2)",
+            "perimeter": "Ramanujan approximation: π * [3(a+b) - sqrt((3a+b)(a+3b))]",
+            "walls_gross_area": "perimeter * height",
+            "walls_net_area": "walls_gross_area - openings_area",
+        }
+
+    elif shape == "сложная":
+        height = float(dimensions.height)
+        floor_area = float(dimensions.manual_floor_area)
+        ceiling_area = (
+            float(dimensions.manual_ceiling_area)
+            if dimensions.manual_ceiling_area is not None
+            else floor_area
+        )
+        perimeter = float(dimensions.manual_perimeter)
+        walls_gross_area = perimeter * height
+        openings_area = _opening_area(request)
+        walls_net_area = (
+            float(dimensions.manual_wall_area)
+            if dimensions.manual_wall_area is not None
+            else max(walls_gross_area - openings_area, 0)
+        )
+        plinth_length = (
+            float(dimensions.manual_baseboard_length)
+            if dimensions.manual_baseboard_length is not None
+            else perimeter
+        )
+
+        formula = {
+            "shape": "manual_complex",
+            "floor_area": "manual_floor_area",
+            "ceiling_area": "manual_ceiling_area OR manual_floor_area",
+            "perimeter": "manual_perimeter",
+            "walls_gross_area": "manual_perimeter * height",
+            "walls_net_area": "manual_wall_area OR walls_gross_area - openings_area",
+            "baseboard": "manual_baseboard_length OR manual_perimeter",
         }
 
     else:
         raise ValueError(f"Unsupported room_shape: {shape}")
-
-    openings_area = _opening_area(request)
-    walls_gross_area = perimeter * height
-    walls_net_area = max(walls_gross_area - openings_area, 0)
-    plinth_length = perimeter
 
     return {
         "room_shape": shape,

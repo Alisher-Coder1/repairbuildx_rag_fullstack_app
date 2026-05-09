@@ -14,7 +14,7 @@ from .schemas import ConsultationResponse, ConsultRequest, ValidationIssue
 from .validation import validate_consult_request
 
 
-CONTRACT_VERSION = "stage7.2"
+CONTRACT_VERSION = "stage7.2.2"
 
 
 def _parse_origins() -> List[str]:
@@ -207,6 +207,30 @@ def _surface_advice(request: ConsultRequest, work_packages: Dict[str, Any]) -> L
     ]
 
 
+def _geometry_line(request: ConsultRequest) -> str:
+    dimensions = request.dimensions
+
+    if request.room_shape == "прямоугольная":
+        return f"- Геометрия: прямоугольник {dimensions.length} × {dimensions.width} × {dimensions.height} м."
+
+    if request.room_shape == "круглая":
+        return f"- Геометрия: круглая комната, диаметр {dimensions.diameter} м, высота {dimensions.height} м."
+
+    if request.room_shape == "овальная":
+        return f"- Геометрия: овальная комната, большая ось {dimensions.length} м, малая ось {dimensions.width} м, высота {dimensions.height} м."
+
+    if request.room_shape == "сложная":
+        notes = dimensions.geometry_notes or "описание формы не указано"
+        return (
+            f"- Геометрия: сложная форма по измеренным параметрам: "
+            f"площадь пола {dimensions.manual_floor_area} м², "
+            f"периметр {dimensions.manual_perimeter} м, высота {dimensions.height} м. "
+            f"Комментарий: {notes}."
+        )
+
+    return f"- Геометрия: {request.room_shape}."
+
+
 def _build_answer(
     request: ConsultRequest,
     metrics: Dict[str, Any],
@@ -214,17 +238,7 @@ def _build_answer(
     warnings: List[ValidationIssue],
     rag_fragments: List[Dict[str, Any]],
 ) -> str:
-    dimensions = request.dimensions
     formula = metrics["formula"]
-
-    if request.room_shape == "прямоугольная":
-        geometry_line = (
-            f"- Геометрия: прямоугольник {dimensions.length} × {dimensions.width} × {dimensions.height} м."
-        )
-    else:
-        geometry_line = (
-            f"- Геометрия: круглая комната, диаметр {dimensions.diameter} м, высота {dimensions.height} м."
-        )
 
     rag_lines = []
     for item in rag_fragments[:3]:
@@ -241,7 +255,7 @@ def _build_answer(
         f"- Тип помещения: {request.room_type}",
         f"- Зона эксплуатации: {request.zone_type}",
         f"- Форма помещения: {request.room_shape}",
-        geometry_line,
+        _geometry_line(request),
         f"- Уровень ремонта: {request.repair_context.repair_level}",
         f"- Состояние помещения: {request.repair_context.property_condition}",
         "",
@@ -255,9 +269,10 @@ def _build_answer(
         f"- Плинтус / примыкания по периметру: {metrics['plinth']} м.пог.",
         "",
         "## 3. Формулы",
+        f"- Тип формулы: {formula['shape']}",
         f"- Площадь пола: {formula['floor_area']}",
         f"- Периметр: {formula['perimeter']}",
-        f"- Стены: {formula['walls_gross_area']} минус площадь проёмов",
+        f"- Стены: {formula['walls_gross_area']} минус площадь проёмов или ручная площадь стен для сложной формы",
         "",
         "## 4. Поверхности и работы",
         *_surface_advice(request, work_packages),
