@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from typing import Any, Dict, List, Optional
-
 from pydantic import BaseModel, Field
 
 
@@ -10,6 +9,19 @@ class Opening(BaseModel):
     width: float
     height: float
     count: int = Field(default=1)
+
+
+class WallSegment(BaseModel):
+    id: str = Field(default="W1")
+    type: str = Field(default="straight")  # straight / arc / curved / wave / niche / projection / column_side / other
+    length: float
+    height: Optional[float] = None
+    baseboard_required: bool = True
+    finish_required: bool = True
+    corner_after_type: str = "unknown"  # inner / outer / rounded / none / unknown
+    angle_deg: Optional[float] = None
+    radius_m: Optional[float] = None
+    notes: Optional[str] = None
 
 
 class Dimensions(BaseModel):
@@ -26,6 +38,7 @@ class Dimensions(BaseModel):
     manual_baseboard_length: Optional[float] = None
     geometry_notes: Optional[str] = None
 
+    # Reserved for future polygon/coordinate geometry.
     segments: Optional[List[Dict[str, Any]]] = None
 
 
@@ -65,19 +78,20 @@ class UserGoals(BaseModel):
 
 
 class ConsultRequest(BaseModel):
-    # Stage 7.2.2 contract
     room_type: Optional[str] = None
     zone_type: Optional[str] = None
     room_shape: Optional[str] = None
+    geometry_mode: Optional[str] = None
     dimensions: Optional[Dimensions] = None
     openings: List[Opening] = Field(default_factory=list)
+    wall_segments: List[WallSegment] = Field(default_factory=list)
     surface_specs: Optional[SurfaceSpecs] = None
     repair_context: Optional[RepairContext] = None
     engineering: Optional[Engineering] = None
     user_goals: Optional[UserGoals] = None
     user_question: Optional[str] = None
 
-    # Legacy compatibility fields from older frontend versions
+    # Legacy compatibility fields.
     shape: Optional[str] = None
     zone: Optional[str] = None
     length: Optional[float] = None
@@ -96,51 +110,51 @@ class ConsultRequest(BaseModel):
 
         room_shape = data.get("room_shape") or data.get("shape") or "прямоугольная"
         zone_type = data.get("zone_type") or data.get("zone") or "сухая зона"
-        user_question = data.get("user_question") or data.get("question") or ""
+        geometry_mode = data.get("geometry_mode")
+        if room_shape == "сложная" and not geometry_mode:
+            geometry_mode = "measured_totals"
 
-        dimensions = data.get("dimensions")
-        if not dimensions:
-            dimensions = {
-                "length": data.get("length"),
-                "width": data.get("width"),
-                "height": data.get("height"),
-            }
+        dimensions = data.get("dimensions") or {
+            "length": data.get("length"),
+            "width": data.get("width"),
+            "height": data.get("height"),
+        }
 
-        surface_specs = data.get("surface_specs")
-        if not surface_specs:
-            surface_specs = {
-                "floor": {
-                    "current_base": "unknown",
-                    "covering": data.get("floor_covering") or data.get("floor") or "unknown",
-                    "needs_demolition": None,
-                    "needs_leveling": "unknown",
-                },
-                "walls": {
-                    "current_base": "unknown",
-                    "covering": data.get("wall_covering") or data.get("walls") or "unknown",
-                    "needs_demolition": None,
-                    "needs_leveling": "unknown",
-                },
-                "ceiling": {
-                    "current_base": "unknown",
-                    "covering": data.get("ceiling_covering") or data.get("ceiling") or "unknown",
-                    "needs_demolition": None,
-                    "needs_leveling": "unknown",
-                    "has_lighting_points": "unknown",
-                },
-            }
+        surface_specs = data.get("surface_specs") or {
+            "floor": {
+                "current_base": "unknown",
+                "covering": data.get("floor_covering") or data.get("floor") or "unknown",
+                "needs_demolition": None,
+                "needs_leveling": "unknown",
+            },
+            "walls": {
+                "current_base": "unknown",
+                "covering": data.get("wall_covering") or data.get("walls") or "unknown",
+                "needs_demolition": None,
+                "needs_leveling": "unknown",
+            },
+            "ceiling": {
+                "current_base": "unknown",
+                "covering": data.get("ceiling_covering") or data.get("ceiling") or "unknown",
+                "needs_demolition": None,
+                "needs_leveling": "unknown",
+                "has_lighting_points": "unknown",
+            },
+        }
 
         return ConsultRequest(
             room_type=data.get("room_type") or "unknown",
             zone_type=zone_type,
             room_shape=room_shape,
+            geometry_mode=geometry_mode,
             dimensions=Dimensions(**dimensions),
             openings=[Opening(**item) if isinstance(item, dict) else item for item in data.get("openings", [])],
+            wall_segments=[WallSegment(**item) if isinstance(item, dict) else item for item in data.get("wall_segments", [])],
             surface_specs=SurfaceSpecs(**surface_specs),
             repair_context=RepairContext(**(data.get("repair_context") or {})),
             engineering=Engineering(**(data.get("engineering") or {})),
             user_goals=UserGoals(**(data.get("user_goals") or {})),
-            user_question=user_question,
+            user_question=data.get("user_question") or data.get("question") or "",
         )
 
 
@@ -153,7 +167,7 @@ class ValidationIssue(BaseModel):
 
 class ConsultationResponse(BaseModel):
     status: str
-    contract_version: str = "stage7.2.2"
+    contract_version: str = "stage7.2.3"
     metrics: Dict[str, Any]
     calculation: Dict[str, Any]
     answer: str
