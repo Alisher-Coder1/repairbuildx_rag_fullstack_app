@@ -14,8 +14,9 @@ REPAIR_KEYWORDS = {
 }
 
 OFF_TOPIC_KEYWORDS = {
-    "погода", "биткоин", "президент", "стих", "плов", "рецепт", "новости", "курс валют",
-    "футбол", "кино", "музыка", "дата", "время",
+    # Use stems as well as full words, so "погоде", "погоду", "погодой" are caught.
+    "погод", "биткоин", "президент", "стих", "плов", "рецепт", "новост", "курс валют",
+    "футбол", "кино", "музык", "сегодня", "дата", "время",
 }
 
 
@@ -56,12 +57,109 @@ def _extract_number(raw: str, labels: list[str]) -> str | None:
     return f"{number}{suffix}"
 
 
+
+
+def _extract_user_question_from_context(context: Any | None) -> str:
+    # Finds the user's free-text question inside FastAPI locals(), Pydantic models,
+    # dict payloads, nested objects, or already stringified request data.
+    question_keys = (
+        "user_question",
+        "question",
+        "prompt",
+        "message",
+        "user_message",
+        "consultant_question",
+        "additional_notes",
+        "notes",
+    )
+
+    def looks_like_question(value: str) -> bool:
+        v = value.strip()
+        if not v:
+            return False
+        # Prefer natural user text; avoid treating long technical payload dumps as the question.
+        if len(v) > 600:
+            return False
+        return any(marker in v.lower() for marker in (
+            "погод", "ремонт", "кух", "ванн", "комнат", "помещ", "материал",
+            "рассч", "плитк", "ламинат", "стен", "пол", "потол", "сантех", "электр",
+        ))
+
+    visited: set[int] = set()
+
+    def walk(value: Any) -> str:
+        if value is None:
+            return ""
+
+        object_id = id(value)
+        if object_id in visited:
+            return ""
+        visited.add(object_id)
+
+        if isinstance(value, str):
+            return value if looks_like_question(value) else ""
+
+        if isinstance(value, dict):
+            for key in question_keys:
+                if key in value:
+                    found = walk(value.get(key))
+                    if found:
+                        return found
+            for nested_value in value.values():
+                found = walk(nested_value)
+                if found:
+                    return found
+            return ""
+
+        # Pydantic v2
+        if hasattr(value, "model_dump"):
+            try:
+                found = walk(value.model_dump())
+                if found:
+                    return found
+            except Exception:
+                pass
+
+        # Pydantic v1
+        if hasattr(value, "dict"):
+            try:
+                found = walk(value.dict())
+                if found:
+                    return found
+            except Exception:
+                pass
+
+        for key in question_keys:
+            if hasattr(value, key):
+                try:
+                    found = walk(getattr(value, key))
+                    if found:
+                        return found
+                except Exception:
+                    pass
+
+        try:
+            value_as_text = str(value)
+            if len(value_as_text) <= 600 and looks_like_question(value_as_text):
+                return value_as_text
+        except Exception:
+            pass
+
+        return ""
+
+    return walk(context)
+
+
 def _question_is_off_topic(question: str) -> bool:
     q = question.lower().strip()
     if not q:
         return False
+
     has_repair = any(word in q for word in REPAIR_KEYWORDS)
     has_off_topic = any(word in q for word in OFF_TOPIC_KEYWORDS)
+
+    # "влажная погода влияет на штукатурку" passes because it has repair signal.
+    # "поговорим о погоде" stops because it has no repair signal.
     return has_off_topic and not has_repair
 
 
@@ -133,14 +231,7 @@ def compose_consultation_answer(raw_answer: Any, context: Any | None = None) -> 
     raw = _safe_text(raw_answer).strip()
     ctx_text = _safe_text(context)
 
-    user_question = ""
-    if isinstance(context, dict):
-        for key in ("user_question", "question", "prompt"):
-            if key in context:
-                user_question = _safe_text(context.get(key))
-                break
-        if not user_question and "payload" in context:
-            user_question = _safe_text(context.get("payload"))
+    user_question = _extract_user_question_from_context(context)
 
     if _question_is_off_topic(user_question):
         return (
