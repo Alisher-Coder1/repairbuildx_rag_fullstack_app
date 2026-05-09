@@ -114,11 +114,15 @@ function Field({ label, children, hint }) {
   );
 }
 
-function SelectField({ label, value, onChange, options, hint }) {
+function SelectField({ label, value, onChange, options, hint, disabled = false }) {
   return (
     <Field label={label} hint={hint}>
-      <select value={value} onChange={(event) => onChange(event.target.value)}>
-        {options.map((option) => <option key={option} value={option}>{option}</option>)}
+      <select value={value} onChange={(event) => onChange(event.target.value)} disabled={disabled}>
+        {options.map((option) => (
+          <option key={option} value={option}>
+            {getUiLabel(option)}
+          </option>
+        ))}
       </select>
     </Field>
   );
@@ -394,7 +398,7 @@ function App() {
               <>
                 <div className="unsupported-box">Сложная форма покрывает Г-образные, П-образные, треугольные, овальные/радиусные, волнистые, помещения с нишами, эркерами, колоннами и нестандартным контуром. Система не угадывает форму — она считает по измеренным параметрам.</div>
 
-                <SelectField label="Режим сложной геометрии" value={geometryMode} options={GEOMETRY_MODES} onChange={setGeometryMode} hint="measured_totals — по общим замерам; wall_segments — по отдельным стенам/участкам" />
+                <SelectField label="Режим сложной геометрии" value={geometryMode} options={GEOMETRY_MODES} onChange={setGeometryMode} hint="по общим замерам — быстрый ввод; по сегментам стен — точнее для сложного контура" />
 
                 <div className="grid three">
                   <NumberField label="Измеренная площадь пола, м²" value={dimensions.manual_floor_area} onChange={(v) => updateDimension("manual_floor_area", v)} />
@@ -510,7 +514,7 @@ function App() {
 
           <Section title="6. Инженерные системы">
             <div className="grid three">
-              {Object.entries(engineering).map(([key, value]) => <SelectField key={key} label={key} value={value} options={YES_NO_UNKNOWN} onChange={(v) => updateEngineering(key, v)} />)}
+              {Object.entries(engineering).map(([key, value]) => <SelectField key={key} label={getUiLabel(key)} value={value} options={YES_NO_UNKNOWN} onChange={(v) => updateEngineering(key, v)} />)}
             </div>
           </Section>
 
