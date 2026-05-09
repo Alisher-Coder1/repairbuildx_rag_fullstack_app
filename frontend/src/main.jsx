@@ -362,6 +362,8 @@ function setupProgressiveConsultantUxV2() {
 
     card.classList.add("ux-step-card-v2");
     card.dataset.uxTitle = step.title;
+    card.dataset.uxTitleLockedForVisibleHeader = "true";
+
 
     const oldHeading = card.querySelector(".ux-step-heading");
     if (oldHeading) {
@@ -379,6 +381,12 @@ function setupProgressiveConsultantUxV2() {
         <span class="ux-step-compact-arrow" aria-hidden="true">⌄</span>
       `;
       card.prepend(header);
+
+      const visibleTitleNode = header.querySelector(".ux-step-compact-title");
+      if (visibleTitleNode) {
+        visibleTitleNode.textContent = step.title;
+      }
+      header.setAttribute("aria-label", step.title);
 
       header.addEventListener("click", (event) => {
         event.preventDefault();

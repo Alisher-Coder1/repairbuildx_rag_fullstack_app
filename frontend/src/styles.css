@@ -889,3 +889,107 @@ details[hidden] {
   }
 }
 
+
+/* Stage 7.4.3: hard fix for visible closed step titles
+   Reason: older collapsed-card CSS can hide the new compact header.
+   This renders the title from data-ux-title directly on the collapsed card,
+   so the user always sees the step name. */
+.ux-step-card-v2.ux-collapsed {
+  position: relative !important;
+  min-height: 74px !important;
+  max-height: 74px !important;
+  overflow: hidden !important;
+  padding: 18px 54px 18px 20px !important;
+  display: flex !important;
+  align-items: center !important;
+  opacity: 1 !important;
+  cursor: pointer !important;
+}
+
+.ux-step-card-v2.ux-collapsed > * {
+  display: none !important;
+}
+
+.ux-step-card-v2.ux-collapsed::before {
+  content: attr(data-ux-title) !important;
+  display: block !important;
+  color: #0f172a !important;
+  font-size: 18px !important;
+  font-weight: 800 !important;
+  line-height: 1.25 !important;
+  white-space: normal !important;
+  overflow: visible !important;
+  text-overflow: clip !important;
+  z-index: 2 !important;
+}
+
+.ux-step-card-v2.ux-collapsed[data-ux-completed="true"]::before {
+  content: attr(data-ux-title) "  ✓ заполнено" !important;
+}
+
+.ux-step-card-v2.ux-collapsed::after {
+  content: "⌄" !important;
+  display: block !important;
+  position: absolute !important;
+  top: 50% !important;
+  right: 20px !important;
+  bottom: auto !important;
+  transform: translateY(-50%) !important;
+  padding: 0 !important;
+  background: transparent !important;
+  color: #2563eb !important;
+  font-size: 20px !important;
+  font-weight: 900 !important;
+  pointer-events: none !important;
+  z-index: 3 !important;
+}
+
+.ux-step-card-v2.ux-open {
+  max-height: none !important;
+  overflow: visible !important;
+}
+
+.ux-step-card-v2.ux-open::before,
+.ux-step-card-v2.ux-open::after {
+  display: none !important;
+}
+
+.ux-step-card-v2.ux-open > * {
+  display: revert;
+}
+
+.ux-step-card-v2.ux-open > .ux-step-compact-header {
+  display: flex !important;
+}
+
+/* The opened title must be visible too. */
+.ux-step-card-v2.ux-open .ux-step-compact-title {
+  display: block !important;
+  color: #0f172a !important;
+  font-size: 18px !important;
+  font-weight: 800 !important;
+  line-height: 1.25 !important;
+}
+
+/* Keep the consultant area below the steps and full-width for conversation. */
+.ux-consultant-panel-bottom,
+.ux-consultant-panel.ux-consultant-panel-bottom {
+  position: static !important;
+  width: 100% !important;
+  max-width: none !important;
+  grid-column: 1 / -1 !important;
+  margin-top: 20px !important;
+  min-height: 440px !important;
+}
+
+@media (max-width: 1180px) {
+  .ux-step-card-v2.ux-collapsed {
+    max-height: 72px !important;
+    min-height: 72px !important;
+  }
+
+  .ux-step-card-v2.ux-collapsed::before {
+    font-size: 16px !important;
+  }
+}
+
