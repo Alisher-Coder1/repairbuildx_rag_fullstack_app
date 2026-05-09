@@ -41,35 +41,6 @@ const PROPERTY_CONDITIONS = [
   { value: "старая отделка", label: "старая отделка" },
 ];
 
-// Surface base options.
-// Kept as an array with named properties so it works with both BASE_OPTIONS.map(...)
-// and BASE_OPTIONS.floor / BASE_OPTIONS.walls / BASE_OPTIONS.ceiling usages.
-const BASE_OPTIONS = ["бетон", "бетонная стяжка", "штукатурка", "гипсокартон", "старая отделка"];
-BASE_OPTIONS.floor = ["бетонная стяжка", "бетон", "деревянное основание", "старая отделка"];
-BASE_OPTIONS.wall = ["штукатурка", "бетон", "гипсокартон", "старая отделка"];
-BASE_OPTIONS.walls = BASE_OPTIONS.wall;
-BASE_OPTIONS.ceiling = ["бетон", "штукатурка", "гипсокартон", "старая отделка"];
-
-
-// Finish covering options.
-// Also supports both COVERING_OPTIONS.map(...) and surface-specific keys.
-const COVERING_OPTIONS = ["краска", "плитка", "ламинат", "обои", "декоративная штукатурка"];
-COVERING_OPTIONS.floor = ["ламинат", "плитка", "керамогранит", "линолеум", "паркет", "наливной пол"];
-COVERING_OPTIONS.wall = ["краска", "обои", "плитка", "декоративная штукатурка", "стеновые панели"];
-COVERING_OPTIONS.walls = COVERING_OPTIONS.wall;
-COVERING_OPTIONS.ceiling = ["краска", "натяжной потолок", "гипсокартон", "штукатурка"];
-
-
-const YES_NO_UNKNOWN_OPTIONS = ["yes", "no", "unknown"];
-
-
-const YES_NO_AUTO_UNKNOWN_OPTIONS = ["auto", "yes", "no", "unknown"];
-
-
-const ALIGNMENT_OPTIONS = YES_NO_UNKNOWN_OPTIONS;
-
-
-
 
 
 const REPAIR_OBJECT_LIFECYCLE_HINTS = {
