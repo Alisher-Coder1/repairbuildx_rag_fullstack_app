@@ -602,3 +602,103 @@ details[hidden] {
   }
 }
 
+
+/* Stage 7.4.1: compact step titles + two-column progressive layout */
+.ux-steps-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(260px, 1fr));
+  gap: 16px;
+  align-items: start;
+}
+
+/* Expanded step gets full width so fields are readable. Closed steps stay compact in 2 columns. */
+.ux-steps-grid .ux-step-card.ux-open {
+  grid-column: 1 / -1;
+}
+
+/* Closed card shows only the main title. No hints, no fields, no clipped text. */
+.ux-step-card.ux-collapsed {
+  max-height: none !important;
+  min-height: 68px;
+  overflow: visible !important;
+  padding: 18px 54px 18px 20px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+}
+
+.ux-step-card.ux-collapsed > :not(.ux-step-heading) {
+  display: none !important;
+}
+
+.ux-step-card.ux-collapsed .ux-step-heading {
+  margin: 0 !important;
+  padding: 0 !important;
+  line-height: 1.25;
+  white-space: normal;
+  overflow: visible;
+}
+
+/* Small arrow only, not extra text. */
+.ux-step-card.ux-collapsed::after {
+  content: "⌄" !important;
+  position: absolute;
+  top: 50%;
+  right: 20px;
+  bottom: auto;
+  transform: translateY(-50%);
+  padding: 0;
+  background: transparent;
+  color: #2563eb;
+  font-size: 20px;
+  font-weight: 800;
+  pointer-events: none;
+}
+
+.ux-step-card.ux-open::after {
+  display: none !important;
+}
+
+.ux-step-card.ux-open .ux-step-hint {
+  display: block;
+}
+
+.ux-step-card.ux-open .ux-step-actions {
+  display: flex;
+}
+
+/* Completed marker remains compact and readable next to the title. */
+.ux-step-card[data-ux-completed="true"] .ux-step-heading::after {
+  content: "✓ заполнено";
+  display: inline-flex;
+  margin-left: 10px;
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: rgba(16, 185, 129, 0.12);
+  color: #047857;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1;
+  vertical-align: middle;
+}
+
+.ux-consultant-panel {
+  min-height: 380px;
+}
+
+@media (max-width: 1180px) {
+  .ux-steps-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .ux-steps-grid .ux-step-card.ux-open {
+    grid-column: auto;
+  }
+}
+
+@media (max-width: 640px) {
+  .ux-step-card.ux-collapsed {
+    padding-right: 48px;
+  }
+}
+

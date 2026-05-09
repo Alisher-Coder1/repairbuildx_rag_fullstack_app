@@ -301,6 +301,17 @@ function setupProgressiveConsultantUx() {
 
   PROGRESSIVE_CONSULTANT_STEPS.forEach((step, index) => prepareUxStepCard(step, index));
 
+  const uxStepCards = Array.from(document.querySelectorAll(".ux-step-card"));
+  const uxStepsParent = uxStepCards[0]?.parentElement;
+  if (
+    uxStepsParent &&
+    uxStepCards.length >= 2 &&
+    uxStepCards.every((card) => card.parentElement === uxStepsParent)
+  ) {
+    uxStepsParent.classList.add("ux-steps-grid");
+  }
+
+
   const consultantCard = findUxCardByText("Результат консультанта");
   if (consultantCard) {
     consultantCard.classList.add("ux-consultant-panel");
