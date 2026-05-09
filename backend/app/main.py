@@ -12,6 +12,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from .calculations import build_work_packages, calculate_room_metrics
 from .schemas import ConsultationResponse, ConsultRequest, ValidationIssue
 from .validation import validate_consult_request
+from .consultation_composer import compose_consultation_answer
 
 
 CONTRACT_VERSION = "stage7.2.3"
@@ -297,6 +298,8 @@ def consult(request: ConsultRequest) -> ConsultationResponse:
     rag_fragments = _search_rag_fragments(normalized)
     answer = _build_answer(normalized, metrics, work_packages, warnings, rag_fragments)
     payload = normalized.model_dump() if hasattr(normalized, "model_dump") else normalized.dict()
+
+    answer = compose_consultation_answer(answer, locals())
 
     return ConsultationResponse(
         status="ok",
