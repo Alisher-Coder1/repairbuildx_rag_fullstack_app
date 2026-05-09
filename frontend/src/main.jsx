@@ -2,6 +2,13 @@ import React, { useMemo, useState } from "react";
 import { createRoot } from "react-dom/client";
 import "./styles.css";
 
+
+const STAGE_7_3_UX = {
+  showDeveloperDebug: false,
+  showRawRagFragments: false,
+  showPayloadPreview: false,
+};
+
 const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:8000";
 
 const ROOM_TYPE_OPTIONS = ["кухня", "ванная", "санузел", "спальня", "гостиная", "коридор", "прихожая", "детская", "кабинет", "балкон", "лоджия", "кладовая", "гардеробная", "техническое помещение"];
@@ -93,6 +100,10 @@ function getMetric(source, keys) {
 }
 
 function Section({ title, subtitle, children }) {
+  if (!STAGE_7_3_UX.showPayloadPreview && (title === "Payload preview" || title === "Технические данные")) {
+    return null;
+  }
+
   return (
     <section className="section-card">
       <div className="section-head">
@@ -552,13 +563,13 @@ function App() {
                   <div><span>Проёмы</span><strong>{roundNumber(getMetric(resultSource, ["openings_area", "opening_area", "openingsArea"]))} м²</strong></div>
                   <div><span>Плинтус</span><strong>{roundNumber(getMetric(resultSource, ["plinth", "baseboard", "perimeter"]))} м.пог.</strong></div>
                 </div>
-                <div className="answer-box"><h3>Ответ</h3><pre>{answer}</pre></div>
-                {Array.isArray(ragFragments) && ragFragments.length ? <details className="rag-details"><summary>Найденные RAG-фрагменты</summary><pre>{JSON.stringify(ragFragments, null, 2)}</pre></details> : null}
+                <div className="answer-box"><h3>Консультация</h3><pre>{answer}</pre></div>
+                {Array.isArray(ragFragments) && ragFragments.length ? <details hidden className="rag-details"><summary>Технические источники / RAG-фрагменты</summary><pre>{JSON.stringify(ragFragments, null, 2)}</pre></details> : null}
               </>
             ) : <div className="empty-result"><p>После запуска здесь появятся расчётные показатели и консультация.</p></div>}
           </Section>
 
-          <Section title="Payload preview" subtitle="Stage 7.2.3 contract, который отправляется в backend.">
+          <Section title="Технические данные" subtitle="Stage 7.2.3 contract, который отправляется в backend.">
             <pre className="payload-preview">{JSON.stringify(payload, null, 2)}</pre>
           </Section>
         </aside>
