@@ -10,6 +10,7 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
 from .calculations import build_work_packages, calculate_room_metrics
+from .repair_lifecycle import build_repair_stage_plan
 from .schemas import ConsultationResponse, ConsultRequest, ValidationIssue
 from .validation import validate_consult_request
 from .consultation_composer import compose_consultation_answer
@@ -295,6 +296,7 @@ def consult(request: ConsultRequest) -> ConsultationResponse:
 
     metrics = calculate_room_metrics(normalized)
     work_packages = build_work_packages(normalized, metrics)
+    stage_plan = build_repair_stage_plan(normalized, metrics, work_packages)
     rag_fragments = _search_rag_fragments(normalized)
     answer = _build_answer(normalized, metrics, work_packages, warnings, rag_fragments)
     payload = normalized.model_dump() if hasattr(normalized, "model_dump") else normalized.dict()
