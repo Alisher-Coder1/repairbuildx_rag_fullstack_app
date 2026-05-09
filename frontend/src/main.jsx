@@ -937,7 +937,7 @@ function togglePriority(priority) {
               <p className="stage-subblock-note">Состояние помещения и уровень ремонта влияют на состав работ, риски, подготовку основания и глубину консультации.</p>
               <div className="grid three">
               <SelectField label="Состояние помещения" value={repairContext.property_condition} options={PROPERTY_CONDITIONS} onChange={(v) => setRepairContext((c) => ({ ...c, property_condition: v }))} />
-              <SelectField label="Уровень ремонта" value={repairContext.repair_level} options={REPAIR_LEVELS} onChange={(v) => setRepairContext((c) => ({ ...c, repair_level: v }))} />
+              <SelectField label="Уровень предполагаемого ремонта" value={repairContext.repair_level} options={REPAIR_LEVELS} onChange={(v) => setRepairContext((c) => ({ ...c, repair_level: v }))} />
               <label className="checkbox-line top-space"><input type="checkbox" checked={repairContext.has_existing_finish} onChange={(e) => setRepairContext((c) => ({ ...c, has_existing_finish: e.target.checked }))} /> Есть существующая отделка</label>
             </div>
             </div>
@@ -1037,6 +1037,16 @@ function togglePriority(priority) {
               ))}
             </div>
             </div>
+          
+            <div className="section-actions">
+              <button type="button" className="ghost-button" onClick={() => goToPreviousStep("dimensions")}>
+                Назад
+              </button>
+              <button type="button" className="primary-button" onClick={() => completeAndGoNext("dimensions")}>
+                Готово, следующий шаг
+              </button>
+            </div>
+
           </Section>
 <Section
             title="3. Что будет в помещении / объекты"
