@@ -431,7 +431,7 @@ function App() {
                     </div>
 
                     <div className="grid four">
-                      <SelectField label="Угол после сегмента" value={draftWallSegment.corner_after_type} options={CORNER_TYPES} onChange={(v) => setDraftWallSegment((c) => ({ ...c, corner_after_type: v }))} />
+                      <SelectField label="Угол после сегмента" value={getUiLabel(draftWallSegment.corner_after_type)} options={CORNER_TYPES} onChange={(v) => setDraftWallSegment((c) => ({ ...c, corner_after_type: v }))} />
                       <NumberField label="Угол, градусы" value={draftWallSegment.angle_deg} onChange={(v) => setDraftWallSegment((c) => ({ ...c, angle_deg: v }))} />
                       <label className="checkbox-line top-space"><input type="checkbox" checked={draftWallSegment.baseboard_required} onChange={(e) => setDraftWallSegment((c) => ({ ...c, baseboard_required: e.target.checked }))} /> Нужен плинтус</label>
                       <label className="checkbox-line top-space"><input type="checkbox" checked={draftWallSegment.finish_required} onChange={(e) => setDraftWallSegment((c) => ({ ...c, finish_required: e.target.checked }))} /> Нужна отделка</label>
@@ -443,7 +443,7 @@ function App() {
                     <div className="opening-list">
                       {wallSegments.map((s, index) => (
                         <div className="opening-item" key={`${s.id}-${index}`}>
-                          <span>{s.id}: {s.type}, {s.length} м, высота {s.height || dimensions.height} м, угол {s.corner_after_type}</span>
+                          <span>{s.id}: {getUiLabel(s.type)}, {s.length} м, высота {s.height || dimensions.height} м, угол: {getUiLabel(s.corner_after_type)}</span>
                           <button type="button" onClick={() => removeWallSegment(index)}>удалить</button>
                         </div>
                       ))}
