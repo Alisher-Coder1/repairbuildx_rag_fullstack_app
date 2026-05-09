@@ -1331,3 +1331,70 @@ details[hidden] {
   transform: translateY(-1px);
 }
 
+/* Stage 7.5 no-expandedCards geometry fix */
+.stage-card-force-wide,
+.section-card.stage-card-force-wide,
+.card.stage-card-force-wide,
+.ux-card.stage-card-force-wide,
+.wizard-card.stage-card-force-wide,
+section.stage-card-force-wide,
+article.stage-card-force-wide,
+div.stage-card-force-wide {
+  grid-column: 1 / -1 !important;
+  width: 100% !important;
+  max-width: none !important;
+}
+
+/* Fallback: geometry block contains wizard Back/Next controls. */
+section:has(.wizard-secondary-button),
+article:has(.wizard-secondary-button),
+div:has(> .wizard-secondary-button),
+section:has(.wizard-primary-button),
+article:has(.wizard-primary-button),
+div:has(> .wizard-primary-button) {
+  grid-column: 1 / -1 !important;
+  width: 100% !important;
+  max-width: none !important;
+}
+
+.section-actions.wizard-actions {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  margin-top: 18px;
+  flex-wrap: wrap;
+}
+
+.wizard-primary-button,
+.ux-step-next-button {
+  min-height: 44px;
+  padding: 11px 20px;
+  border-radius: 14px;
+  border: 1px solid rgba(37, 99, 235, 0.35);
+  background: linear-gradient(135deg, #2563eb, #0ea5e9);
+  color: #ffffff;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 8px 18px rgba(37, 99, 235, 0.22);
+}
+
+.wizard-secondary-button,
+.ux-step-prev-button {
+  min-height: 44px;
+  padding: 11px 18px;
+  border-radius: 14px;
+  border: 1px solid rgba(148, 163, 184, 0.65);
+  background: rgba(255, 255, 255, 0.92);
+  color: #334155;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.wizard-primary-button:hover,
+.wizard-secondary-button:hover,
+.ux-step-next-button:hover,
+.ux-step-prev-button:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.02);
+}
+

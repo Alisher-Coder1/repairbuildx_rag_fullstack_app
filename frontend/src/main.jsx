@@ -22,9 +22,7 @@ const CORNER_TYPES = ["inner", "outer", "rounded", "none", "unknown"];
 const FLOOR_COVERINGS = ["ламинат", "керамогранит", "керамическая плитка", "наливной пол", "линолеум", "инженерная доска", "паркет", "unknown"];
 const WALL_COVERINGS = ["краска", "обои", "керамическая плитка", "декоративная штукатурка", "панели", "unknown"];
 const CEILING_COVERINGS = ["краска", "побелка", "натяжной потолок", "гипсокартон", "панели", "unknown"];
-const BASE_OPTIONS = ["бетон", "бетонная стяжка", "штукатурка", "гипсокартон", "старая отделка", "после демонтажа", "unknown"];
 const YES_NO_UNKNOWN = ["yes", "no", "unknown", "auto"];
-const PROPERTY_CONDITIONS = ["новостройка без отделки", "черновая отделка", "предчистовая отделка", "старая отделка", "после демонтажа", "неизвестно"];
 const REPAIR_LEVELS = ["косметический", "капитальный", "частичный", "под ключ", "только расчёт материалов", "только консультация"];
 const BUDGET_LEVELS = ["эконом", "средний", "премиум", "не указан"];
 
@@ -127,7 +125,7 @@ function Section({ title, subtitle, children }) {
   }
 
   return (
-    <section className="section-card">
+    <section className={`section-card ${String(title).startsWith("2.") ? "stage-card-force-wide" : ""}`}>
       <div className="section-head">
         <h2>{title}</h2>
         {subtitle ? <p>{subtitle}</p> : null}
@@ -737,6 +735,84 @@ const [userGoals, setUserGoals] = useState({ budget_level: "средний", pri
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
+  const WIZARD_STEP_ORDER = ["room", "geometry", "objects", "rough", "prefinish", "finish", "summary", "question"];
+
+  const WIZARD_STEP_LABELS = {
+    room: ["Помещение"],
+    geometry: ["Геометрия", "Размеры"],
+    objects: ["Что будет", "Объекты"],
+    rough: ["Черновой"],
+    prefinish: ["Предчистовой"],
+    finish: ["Чистовой"],
+    summary: ["Итог"],
+    question: ["Вопрос консультанту"],
+  };
+
+  const normalizeWizardStepKey = (key) => {
+    if (key === "dimensions") return "geometry";
+    if (key === "prefinishing") return "prefinish";
+    return key;
+  };
+
+  const findWizardNavButton = (key) => {
+    const normalizedKey = normalizeWizardStepKey(key);
+    const labels = WIZARD_STEP_LABELS[normalizedKey] || [normalizedKey];
+
+    return Array.from(document.querySelectorAll("button")).find((button) => {
+      const text = (button.textContent || "").replace(/\s+/g, " ").trim().toLowerCase();
+      if (!text) return false;
+      return labels.some((label) => text.includes(String(label).toLowerCase()));
+    });
+  };
+
+  const scrollToWizardStep = (key) => {
+    const normalizedKey = normalizeWizardStepKey(key);
+
+    window.setTimeout(() => {
+      const labels = WIZARD_STEP_LABELS[normalizedKey] || [normalizedKey];
+
+      const directTarget =
+        document.querySelector(`[data-ux-card-key="${normalizedKey}"]`) ||
+        document.querySelector(`[data-step-key="${normalizedKey}"]`) ||
+        document.querySelector(`[data-section-key="${normalizedKey}"]`) ||
+        document.querySelector(`#section-${normalizedKey}`) ||
+        document.querySelector(`#step-${normalizedKey}`);
+
+      if (directTarget) {
+        directTarget.scrollIntoView({ behavior: "smooth", block: "start" });
+        return;
+      }
+
+      const sectionTarget = Array.from(document.querySelectorAll("section, article, .section-card, .ux-section-card, .ux-step-card")).find((node) => {
+        const text = (node.textContent || "").replace(/\s+/g, " ").trim().toLowerCase();
+        return labels.some((label) => text.startsWith(String(label).toLowerCase()) || text.includes(String(label).toLowerCase()));
+      });
+
+      sectionTarget?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 0);
+  };
+
+  const setActiveStep = (targetKey) => {
+    const normalizedKey = normalizeWizardStepKey(targetKey);
+    const navButton = findWizardNavButton(normalizedKey);
+
+    if (navButton) {
+      navButton.click();
+      return;
+    }
+
+    scrollToWizardStep(normalizedKey);
+  };
+
+  const completeWizardStep = (currentKey) => {
+    const normalizedKey = normalizeWizardStepKey(currentKey);
+    const currentIndex = WIZARD_STEP_ORDER.indexOf(normalizedKey);
+    const nextKey = WIZARD_STEP_ORDER[currentIndex + 1] || normalizedKey;
+
+    setActiveStep(nextKey);
+  };
+
+
   const defaultZone = ROOM_TO_ZONE[roomType] || "сухая зона";
 
   const normalizedDimensions = useMemo(() => {
@@ -1040,7 +1116,7 @@ function togglePriority(priority) {
 
           
             <div className="section-actions wizard-actions">
-              <button type="button" className="secondary-button wizard-secondary-button" onClick={() => setActiveStep("dimensions")}>
+              <button type="button" className="secondary-button wizard-secondary-button" onClick={() => setActiveStep("room")}>
                 Назад
               </button>
               <button type="button" className="primary-button wizard-primary-button" onClick={() => completeStep("dimensions")}>
