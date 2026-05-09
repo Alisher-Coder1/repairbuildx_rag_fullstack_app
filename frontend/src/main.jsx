@@ -1037,12 +1037,13 @@ function togglePriority(priority) {
               ))}
             </div>
             </div>
+
           
-            <div className="section-actions">
-              <button type="button" className="ghost-button" onClick={() => goToPreviousStep("dimensions")}>
+            <div className="section-actions wizard-actions">
+              <button type="button" className="secondary-button wizard-secondary-button" onClick={() => setActiveStep("dimensions")}>
                 Назад
               </button>
-              <button type="button" className="primary-button" onClick={() => completeAndGoNext("dimensions")}>
+              <button type="button" className="primary-button wizard-primary-button" onClick={() => completeStep("dimensions")}>
                 Готово, следующий шаг
               </button>
             </div>
