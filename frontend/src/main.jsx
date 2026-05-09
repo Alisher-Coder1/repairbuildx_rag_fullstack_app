@@ -23,6 +23,42 @@ const BUDGET_LEVELS = ["эконом", "средний", "премиум", "не
 const PRIORITIES = ["долговечность", "быстро", "дешево", "влагостойкость", "звукоизоляция", "теплоизоляция", "простота ухода", "минимум сложных работ", "визуальный дизайн"];
 const OPENING_TYPES = ["дверь", "окно", "арка", "ниша"];
 
+const UI_LABELS = {
+  measured_totals: "по общим замерам",
+  wall_segments: "по сегментам стен",
+
+  straight: "прямая стена",
+  arc: "дуговая / радиусная стена",
+  curved: "кривая стена",
+  wave: "волнистая стена",
+  niche: "ниша",
+  projection: "выступ",
+  column_side: "сторона колонны",
+  other: "другое",
+
+  inner: "внутренний угол",
+  outer: "внешний угол",
+  rounded: "скруглённый угол",
+  none: "без угла",
+  unknown: "неизвестно",
+
+  yes: "да",
+  no: "нет",
+  auto: "авто",
+
+  electrical_required: "Нужна электрика",
+  plumbing_required: "Нужна сантехника",
+  ventilation_required: "Нужна вентиляция",
+  heating_required: "Нужно отопление",
+  waterproofing_required: "Нужна гидроизоляция",
+  hvac_required: "Нужен HVAC / кондиционирование",
+};
+
+function getUiLabel(value) {
+  return UI_LABELS[value] || value;
+}
+
+
 function asNumber(value) {
   const number = Number(String(value).replace(",", "."));
   return Number.isFinite(number) ? number : 0;
@@ -316,14 +352,14 @@ function App() {
     <main className="app-shell">
       <header className="hero">
         <div>
-          <p className="eyebrow">Stage 7.2.3 · Complex Geometry Contract v2</p>
+          <p className="eyebrow">Stage 7.2.3 · Контракт сложной геометрии v2</p>
           <h1>AI-консультант по ремонту помещения</h1>
           <p className="hero-text">Интерфейс восстановлен под production-логику: тип помещения, зона, форма, размеры, проёмы, покрытия, инженерные блоки и требования пользователя.</p>
         </div>
         <div className="pipeline-card">
-          <strong>Domain pipeline</strong>
-          <span>room type → zone → shape → geometry mode</span>
-          <span>segments → surfaces → engineering → RAG → answer</span>
+          <strong>Цепочка расчёта</strong>
+          <span>тип помещения → зона → форма → режим геометрии</span>
+          <span>сегменты → поверхности → инженерия → RAG → ответ</span>
         </div>
       </header>
 
