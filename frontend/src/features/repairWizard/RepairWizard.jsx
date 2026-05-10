@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useEffect } from "react";
+﻿import React, { useMemo, useState, useEffect } from "react";
 import WizardSection from "../../components/WizardSection";
 import {
   API_BASE, WIZARD_STEP_FLOW, ROOM_TYPE_OPTIONS, ZONE_OPTIONS, SHAPE_OPTIONS,
@@ -286,7 +286,7 @@ export default function RepairWizard() {
     <main className="app-shell">
       <header className="hero">
         <div>
-          <p className="eyebrow">Stage 7.2.3 · Контракт сложной геометрии v2</p>
+          <p className="eyebrow">Stage 7.5 UI · API contract stage7.2.3</p>
           <h1>AI-консультант по ремонту помещения</h1>
           <p className="hero-text">Интерфейс восстановлен под production-логику: тип помещения, зона, форма, размеры, проёмы, покрытия, инженерные блоки и требования пользователя.</p>
         </div>
@@ -410,3 +410,4 @@ export default function RepairWizard() {
     </main>
   );
 }
+

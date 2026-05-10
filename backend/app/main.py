@@ -1,4 +1,4 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
 import json
 import os
@@ -224,6 +224,7 @@ def _build_answer(request: ConsultRequest, metrics: Dict[str, Any], work_package
         _geometry_line(request, metrics),
         f"- Уровень ремонта: {request.repair_context.repair_level}",
         f"- Состояние помещения: {request.repair_context.property_condition}",
+        f"- Комментарий пользователя: {request.repair_context.user_comment or 'не указан'}",
         "",
         "## 2. Расчётные показатели",
         f"- Площадь пола: {metrics['floor_area']} м²",
@@ -313,3 +314,4 @@ def consult(request: ConsultRequest) -> ConsultationResponse:
         rag_fragments=rag_fragments,
         request_payload=payload,
     )
+
