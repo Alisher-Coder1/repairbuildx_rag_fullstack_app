@@ -318,7 +318,7 @@ export default function RepairWizard() {
         </div>
       </header>
 
-      <div className="layout">
+      <div className="layout consultation-single-layout">
         <form className="form-panel" onSubmit={(e) => e.preventDefault()}>
           <WizardSection {...wizardSectionProps("room")} title="1. Помещение и контекст" subtitle="Тип помещения, зона эксплуатации и исходное состояние ремонта задаются в одном первом шаге.">
             <RoomContextStep
@@ -395,66 +395,24 @@ export default function RepairWizard() {
 
           <WizardSection {...wizardSectionProps("result")} title="6. Консультация" subtitle="После заполнения этапов пользователь получает расчёт, консультацию, этапы работ и возможность продолжить диалог.">
             <ConsultationStep
-              userQuestion={userQuestion}
-              setUserQuestion={setUserQuestion}
-              submitConsultation={submitConsultation}
-              isLoading={isLoading}
-              error={error}
-            />
+  userQuestion={userQuestion}
+  setUserQuestion={setUserQuestion}
+  submitConsultation={submitConsultation}
+  isLoading={isLoading}
+  error={error}
+  result={result}
+  answer={answer}
+  resultSource={resultSource}
+  ragFragments={ragFragments}
+  roundNumber={roundNumber}
+  getMetric={getMetric}
+/>
           </WizardSection>
         </form>
-
-        <aside className="result-panel">
-          <WizardSection title="Результат консультанта" subtitle="Backend принимает Stage 7.2.3 contract: простые формы считаются формулами, сложные — по общим замерам или сегментам стен.">
-            {result ? (
-              <>
-                <div className="status-line">Ответ сформирован</div>
-                <div className="metrics-grid">
-                  <div><span>Площадь пола</span><strong>{roundNumber(getMetric(resultSource, ["floor_area", "floorArea", "s_floor"]))} м²</strong></div>
-                  <div><span>Площадь потолка</span><strong>{roundNumber(getMetric(resultSource, ["ceiling_area", "ceilingArea", "s_ceiling"]))} м²</strong></div>
-                  <div><span>Периметр</span><strong>{roundNumber(getMetric(resultSource, ["perimeter", "p"]))} м</strong></div>
-                  <div><span>Стены чистая</span><strong>{roundNumber(getMetric(resultSource, ["walls_net_area", "wall_area_net", "walls_clean", "clean_wall_area"]))} м²</strong></div>
-                  <div><span>Проёмы</span><strong>{roundNumber(getMetric(resultSource, ["openings_area", "opening_area", "openingsArea"]))} м²</strong></div>
-                  <div><span>Плинтус</span><strong>{roundNumber(getMetric(resultSource, ["plinth", "baseboard", "perimeter"]))} м.пог.</strong></div>
-                </div>
-                <div className="dialog-box">
-  <div className="dialog-box-header">
-    <h3>Диалог с консультантом</h3>
-    <span>{dialogMessages.length ? ${Math.ceil(dialogMessages.length / 2)} ответ(ов) : "ожидание"}</span>
-  </div>
-
-  <div className="dialog-window" aria-live="polite">
-    {dialogMessages.length ? (
-      dialogMessages.map((message, index) => (
-        <div
-          key={${message.role}-${index}}
-          className={dialog-message ${message.role === "user" ? "dialog-message-user" : "dialog-message-assistant"}}
-        >
-          <div className="dialog-message-author">
-            {message.role === "user" ? "Вы" : "AI-консультант"}
-          </div>
-          <pre>{message.text}</pre>
-        </div>
-      ))
-    ) : (
-      <div className="dialog-placeholder">
-        После отправки вопроса здесь появится диалог.
-      </div>
-    )}
-  </div>
-</div>
-                {Array.isArray(ragFragments) && ragFragments.length ? <details hidden className="rag-details"><summary>Технические источники / RAG-фрагменты</summary><pre>{JSON.stringify(ragFragments, null, 2)}</pre></details> : null}
-              </>
-            ) : <div className="empty-result"><p>После запуска здесь появятся расчётные показатели и консультация.</p></div>}
-          </WizardSection>
-
-          <WizardSection title="Технические данные" subtitle="Stage 7.2.3 contract, который отправляется в backend.">
-            <pre className="payload-preview">{JSON.stringify(payload, null, 2)}</pre>
-          </WizardSection>
-        </aside>
       </div>
     </main>
   );
 }
+
 
 
