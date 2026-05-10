@@ -1,37 +1,44 @@
-* {
-  box-sizing: border-box;
-}
-
+/* === БАЗОВЫЕ ПЕРЕМЕННЫЕ === */
 :root {
   --bg: #f5f7fb;
-  --card: rgba(255, 255, 255, 0.92);
-  --text: #172033;
-  --muted: #65708a;
-  --border: #d9e0ef;
+  --card-bg: rgba(255, 255, 255, 0.95);
+  --text: #0f172a;
+  --muted: #475569;
+  --border: rgba(30, 41, 59, 0.12);
   --primary: #2563eb;
   --primary-dark: #1d4ed8;
+  --primary-light: #0ea5e9;
   --warning: #92400e;
   --warning-bg: #fffbeb;
   --error: #b91c1c;
   --error-bg: #fef2f2;
-  --shadow: 0 20px 60px rgba(15, 23, 42, 0.08);
+  --shadow-sm: 0 2px 6px rgba(15, 23, 42, 0.08);
+  --shadow-md: 0 12px 28px rgba(15, 23, 42, 0.12);
+  --shadow-lg: 0 20px 42px rgba(15, 23, 42, 0.16);
+}
+
+/* === СБРОС И БАЗОВЫЕ СТИЛИ === */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
 }
 
 body {
-  margin: 0;
-  min-width: 320px;
   color: var(--text);
   background:
-    radial-gradient(circle at top left, rgba(37, 99, 235, 0.12), transparent 34rem),
+    radial-gradient(circle at top left, rgba(37, 99, 235, 0.08), transparent 34rem),
     linear-gradient(135deg, #f7f8fc 0%, #eef2f7 100%);
-  font-family:
-    Inter,
-    ui-sans-serif,
-    system-ui,
-    -apple-system,
-    BlinkMacSystemFont,
-    "Segoe UI",
-    sans-serif;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+    "Segoe UI", sans-serif;
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+
+#root {
+  min-width: 320px;
 }
 
 button,
@@ -43,19 +50,23 @@ textarea {
 
 button {
   cursor: pointer;
+  border: 1px solid transparent;
+  background: transparent;
 }
 
 button:disabled {
   cursor: not-allowed;
-  opacity: 0.65;
+  opacity: 0.6;
 }
 
+/* === ОБОЛОЧКА ПРИЛОЖЕНИЯ === */
 .app-shell {
   width: min(1440px, 100%);
   margin: 0 auto;
   padding: 36px 24px 56px;
 }
 
+/* === ШАПКА (HERO) === */
 .hero {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 320px;
@@ -90,16 +101,15 @@ h1 {
 }
 
 .pipeline-card {
+  border: 1px solid var(--border);
+  border-radius: 24px;
+  padding: 26px;
+  background: var(--card-bg);
+  box-shadow: var(--shadow-lg);
   display: flex;
-  min-height: 160px;
   flex-direction: column;
   justify-content: center;
   gap: 10px;
-  border: 1px solid var(--border);
-  border-radius: 28px;
-  padding: 26px;
-  background: var(--card);
-  box-shadow: var(--shadow);
 }
 
 .pipeline-card strong {
@@ -111,49 +121,191 @@ h1 {
   line-height: 1.45;
 }
 
+/* === ОСНОВНАЯ СЕТКА === */
 .layout {
   display: grid;
-  grid-template-columns: minmax(0, 1.05fr) minmax(420px, 0.95fr);
+  grid-template-columns: 1fr;
   gap: 24px;
   align-items: start;
 }
 
-.form-panel,
-.result-panel {
+/* === ПАНЕЛЬ ЭТАПОВ (ФОРМА) === */
+.form-panel {
   display: flex;
-  flex-direction: column;
-  gap: 18px;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: stretch;
+  gap: 16px;
+  width: 100%;
 }
 
-.result-panel {
-  position: sticky;
-  top: 16px;
-}
-
-.section-card {
+/* === КАРТОЧКА ЭТАПА (ОБЩИЕ СТИЛИ) === */
+section.section-card {
+  background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
   border: 1px solid var(--border);
-  border-radius: 26px;
-  padding: 22px;
-  background: var(--card);
-  box-shadow: var(--shadow);
+  border-left: 5px solid rgba(37, 99, 235, 0.45);
+  border-radius: 20px;
+  box-shadow:
+    var(--shadow-md),
+    inset 0 1px 0 rgba(255, 255, 255, 0.95),
+    inset 0 -8px 14px rgba(15, 23, 42, 0.04);
+  padding: 20px;
+  transition: box-shadow 0.2s, transform 0.2s, border-color 0.2s;
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
 }
 
-.section-head {
+/* === СВЕРНУТАЯ КАРТОЧКА (РАСКЛАДКА) === */
+section.section-card.ux-collapsed {
+  flex: 0 1 430px;
+  width: 430px;
+  max-width: 430px;
+  min-width: 320px;
+  min-height: 72px;
+  padding: 20px 22px;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+}
+
+/* Заголовок в свернутой карточке */
+section.section-card.ux-collapsed .section-head {
+  width: 100%;
+}
+
+section.section-card.ux-collapsed .section-head p {
+  display: none;
+}
+
+/* Визуальные эффекты свернутой карточки (псевдоэлементы) */
+section.section-card.ux-collapsed::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  border-radius: inherit;
+  background:
+    linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.7) 0%,
+      rgba(255, 255, 255, 0.2) 40%,
+      rgba(15, 23, 42, 0.02) 100%
+    );
+}
+
+section.section-card.ux-collapsed::after {
+  content: "";
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  bottom: 0;
+  height: 40%;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(
+      ellipse at center bottom,
+      rgba(37, 99, 235, 0.08) 0%,
+      rgba(37, 99, 235, 0.02) 50%,
+      rgba(37, 99, 235, 0) 80%
+    );
+  border-radius: 0 0 18px 18px;
+}
+
+/* Контент поверх оттенения */
+section.section-card.ux-collapsed > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* Hover свернутой карточки */
+section.section-card.ux-collapsed:hover {
+  box-shadow:
+    var(--shadow-lg),
+    inset 0 1px 0 rgba(255, 255, 255, 0.98),
+    inset 0 -10px 18px rgba(37, 99, 235, 0.06);
+  border-left-color: rgba(37, 99, 235, 0.85);
+  transform: translateY(-2px);
+}
+
+/* === РАСКРЫТАЯ КАРТОЧКА === */
+section.section-card.ux-open {
+  flex: 0 0 100%;
+  width: 100%;
+  max-width: 100%;
+  min-height: auto;
+  padding: 28px;
+  cursor: default;
+  border-left-color: rgba(14, 165, 233, 0.8);
+  box-shadow:
+    var(--shadow-lg),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    inset 0 -12px 20px rgba(15, 23, 42, 0.06);
+  background: linear-gradient(180deg, #ffffff 0%, #f9fafb 100%);
+}
+
+/* === ПАНЕЛЬ РЕЗУЛЬТАТА === */
+.result-panel {
+  border: 1px solid var(--border);
+  border-radius: 24px;
+  padding: 24px;
+  background: var(--card-bg);
+  box-shadow: var(--shadow-lg);
+  width: 100%;
+  margin-top: 0;
+}
+
+.result-panel .section-head {
   margin-bottom: 16px;
 }
 
-.section-head h2 {
-  margin: 0;
-  font-size: 22px;
-  letter-spacing: -0.03em;
+.result-panel .section-head h2 {
+  font-size: 20px;
 }
 
-.section-head p {
-  margin: 8px 0 0;
+/* === ПОЛЯ ВВОДА === */
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.field small {
   color: var(--muted);
-  line-height: 1.45;
+  font-size: 12px;
+  font-weight: 500;
 }
 
+input,
+select,
+textarea {
+  width: 100%;
+  border: 1px solid rgba(30, 41, 59, 0.18);
+  border-radius: 14px;
+  padding: 11px 13px;
+  outline: none;
+  background: #fff;
+  color: var(--text);
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  border-color: rgba(37, 99, 235, 0.6);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+}
+
+textarea {
+  resize: vertical;
+}
+
+/* === СЕТКИ ВНУТРИ ЭТАПОВ === */
 .grid {
   display: grid;
   gap: 14px;
@@ -171,100 +323,7 @@ h1 {
   grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
-.field {
-  display: flex;
-  flex-direction: column;
-  gap: 7px;
-  color: #202a3d;
-  font-size: 13px;
-  font-weight: 700;
-}
-
-.field small {
-  color: var(--muted);
-  font-size: 12px;
-  font-weight: 500;
-}
-
-input,
-select,
-textarea {
-  width: 100%;
-  border: 1px solid var(--border);
-  border-radius: 14px;
-  padding: 12px 13px;
-  outline: none;
-  background: #fff;
-  color: var(--text);
-}
-
-textarea {
-  resize: vertical;
-}
-
-input:focus,
-select:focus,
-textarea:focus {
-  border-color: rgba(37, 99, 235, 0.72);
-  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.12);
-}
-
-.warning-box,
-.unsupported-box,
-.error-box {
-  margin-top: 14px;
-  border-radius: 16px;
-  padding: 14px 16px;
-  line-height: 1.45;
-}
-
-.warning-box,
-.unsupported-box {
-  border: 1px solid #facc15;
-  background: var(--warning-bg);
-  color: var(--warning);
-}
-
-.warning-box p {
-  margin: 0 0 6px;
-}
-
-.warning-box p:last-child {
-  margin-bottom: 0;
-}
-
-.error-box {
-  border: 1px solid #fecaca;
-  background: var(--error-bg);
-  color: var(--error);
-}
-
-.secondary-button,
-.primary-button {
-  border: 0;
-  border-radius: 16px;
-  padding: 13px 18px;
-  font-weight: 800;
-}
-
-.secondary-button {
-  margin-top: 14px;
-  background: #e8eefc;
-  color: #173a8a;
-}
-
-.primary-button {
-  width: 100%;
-  margin-top: 16px;
-  background: var(--primary);
-  color: #fff;
-  box-shadow: 0 14px 34px rgba(37, 99, 235, 0.25);
-}
-
-.primary-button:hover {
-  background: var(--primary-dark);
-}
-
+/* === СПИСОК ПРОЁМОВ === */
 .opening-list {
   display: flex;
   flex-direction: column;
@@ -284,40 +343,247 @@ textarea:focus {
 }
 
 .opening-item button {
-  border: 0;
+  border: none;
   background: transparent;
   color: var(--error);
-  font-weight: 800;
+  font-weight: 700;
+  padding: 4px 8px;
 }
 
-.surface-card {
-  border: 1px solid var(--border);
-  border-radius: 20px;
-  padding: 16px;
-  background: rgba(248, 250, 252, 0.8);
-}
-
-.surface-card + .surface-card {
+/* === СЕТКА ОБЪЕКТОВ РЕМОНТА === */
+.repair-object-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(240px, 1fr));
+  gap: 14px;
   margin-top: 14px;
 }
 
-.surface-card h3 {
-  margin: 0 0 14px;
+/* === КНОПКИ === */
+button.primary-button,
+button.wizard-primary-button,
+button.ux-step-next-button {
+  background: linear-gradient(180deg, #38bdf8 0%, #0ea5e9 40%, #1d4ed8 100%);
+  color: #fff;
+  border: 1px solid rgba(29, 78, 216, 0.5);
+  border-radius: 14px;
+  padding: 11px 20px;
+  font-weight: 800;
+  box-shadow:
+    0 6px 18px rgba(29, 78, 216, 0.22),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3),
+    inset 0 -10px 16px rgba(0, 0, 0, 0.12);
+  transition: filter 0.15s, transform 0.1s, box-shadow 0.15s;
+}
+
+button.primary-button:hover,
+button.wizard-primary-button:hover,
+button.ux-step-next-button:hover {
+  filter: brightness(1.02);
+  box-shadow:
+    0 8px 22px rgba(29, 78, 216, 0.28),
+    inset 0 1px 0 rgba(255, 255, 255, 0.35),
+    inset 0 -12px 18px rgba(0, 0, 0, 0.14);
+}
+
+button.primary-button:active,
+button.wizard-primary-button:active,
+button.ux-step-next-button:active {
+  transform: translateY(1px) scale(0.99);
+  box-shadow:
+    0 3px 10px rgba(29, 78, 216, 0.15),
+    inset 0 2px 5px rgba(0, 0, 0, 0.18),
+    inset 0 -4px 8px rgba(255, 255, 255, 0.15);
+}
+
+/* Второстепенные кнопки */
+button.secondary-button,
+button.wizard-secondary-button,
+button.ux-step-prev-button {
+  background: linear-gradient(180deg, #ffffff 0%, #f1f5f9 100%);
+  color: #334155;
+  border: 1px solid rgba(100, 116, 139, 0.25);
+  border-radius: 14px;
+  padding: 10px 18px;
+  font-weight: 700;
+  box-shadow:
+    0 4px 12px rgba(15, 23, 42, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.95),
+    inset 0 -8px 14px rgba(15, 23, 42, 0.04);
+  transition: box-shadow 0.15s, transform 0.1s;
+}
+
+button.secondary-button:hover,
+button.wizard-secondary-button:hover,
+button.ux-step-prev-button:hover {
+  box-shadow:
+    0 8px 20px rgba(15, 23, 42, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.98),
+    inset 0 -10px 16px rgba(15, 23, 42, 0.06);
+  transform: translateY(-1px);
+}
+
+button.secondary-button:active,
+button.wizard-secondary-button:active,
+button.ux-step-prev-button:active {
+  transform: translateY(1px) scale(0.99);
+  box-shadow:
+    0 2px 6px rgba(15, 23, 42, 0.06),
+    inset 0 2px 5px rgba(15, 23, 42, 0.1),
+    inset 0 -4px 8px rgba(255, 255, 255, 0.2);
+}
+
+/* === БЛОКИ С ОШИБКАМИ / ПРЕДУПРЕЖДЕНИЯМИ === */
+.warning-box,
+.unsupported-box {
+  margin-top: 14px;
+  border: 1px solid rgba(250, 204, 21, 0.6);
+  border-radius: 16px;
+  padding: 14px 16px;
+  background: var(--warning-bg);
+  color: var(--warning);
+  line-height: 1.45;
+}
+
+.error-box {
+  margin-top: 14px;
+  border: 1px solid rgba(254, 202, 202, 0.8);
+  border-radius: 16px;
+  padding: 14px 16px;
+  background: var(--error-bg);
+  color: var(--error);
+  line-height: 1.45;
+}
+
+.stage-logic-note {
+  margin: 12px 0 16px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(132, 204, 22, 0.35);
+  background: rgba(247, 254, 231, 0.8);
+  color: #365314;
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+/* === АДАПТИВНОСТЬ === */
+@media (max-width: 1120px) {
+  .hero {
+    grid-template-columns: 1fr;
+  }
+
+  .grid.three,
+  .grid.four {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 860px) {
+  section.section-card.ux-collapsed {
+    flex: 0 0 100%;
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .grid.two,
+  .grid.three,
+  .grid.four {
+    grid-template-columns: 1fr;
+  }
+
+  .repair-object-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .app-shell {
+    padding: 24px 16px 40px;
+  }
+
+  h1 {
+    font-size: clamp(28px, 8vw, 48px);
+  }
+}
+
+@media (max-width: 640px) {
+  .app-shell {
+    padding: 20px 12px 32px;
+  }
+
+  .pipeline-card,
+  .section-card,
+  .result-panel {
+    padding: 18px;
+  }
+
+  button.primary-button,
+  button.wizard-primary-button,
+  button.ux-step-next-button,
+  button.secondary-button,
+  button.wizard-secondary-button,
+  button.ux-step-prev-button {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .opening-item {
+    flex-wrap: wrap;
+  }
+}
+/* === ДОПОЛНИТЕЛЬНЫЕ БЛОКИ ТЕКУЩЕГО WIZARD UI === */
+.stage-subblock {
+  width: 100%;
+  margin-top: 18px;
+  padding: 16px;
+  border-radius: 18px;
+  border: 1px solid rgba(148, 163, 184, 0.28);
+  background: rgba(248, 250, 252, 0.86);
+}
+
+.stage-subblock h3 {
+  margin-bottom: 10px;
+  color: var(--text);
   font-size: 17px;
+  font-weight: 900;
+}
+
+.stage-subblock-note,
+.muted-text {
+  margin: 0 0 12px;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.surface-card {
+  margin-top: 16px;
+  padding: 16px;
+  border: 1px solid rgba(148, 163, 184, 0.30);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.78);
+  box-shadow: var(--shadow-sm);
+}
+
+.surface-card h3 {
+  margin-bottom: 12px;
+  color: var(--text);
+  font-size: 17px;
+  font-weight: 900;
 }
 
 .checkbox-line {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   gap: 10px;
   color: var(--text);
   font-size: 14px;
   font-weight: 700;
+  line-height: 1.35;
 }
 
 .checkbox-line input,
 .chip input {
   width: auto;
+  flex: 0 0 auto;
 }
 
 .top-space {
@@ -335,19 +601,30 @@ textarea:focus {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  border: 1px solid var(--border);
+  border: 1px solid rgba(148, 163, 184, 0.38);
   border-radius: 999px;
   padding: 9px 12px;
   background: #fff;
   color: var(--muted);
   font-size: 13px;
   font-weight: 800;
+  cursor: pointer;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.88);
 }
 
 .chip.selected {
   border-color: rgba(37, 99, 235, 0.45);
   background: rgba(37, 99, 235, 0.09);
   color: var(--primary-dark);
+}
+
+.section-actions,
+.wizard-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 18px;
+  flex-wrap: wrap;
 }
 
 .status-line {
@@ -393,21 +670,19 @@ textarea:focus {
 }
 
 .answer-box h3 {
-  margin: 0 0 10px;
+  margin-bottom: 10px;
 }
 
-pre {
+pre,
+.payload-preview,
+.rag-details pre {
   overflow: auto;
   margin: 0;
   white-space: pre-wrap;
   word-break: break-word;
   color: #263047;
   line-height: 1.55;
-  font-family:
-    "JetBrains Mono",
-    "Fira Code",
-    Consolas,
-    monospace;
+  font-family: "JetBrains Mono", "Fira Code", Consolas, monospace;
   font-size: 13px;
 }
 
@@ -444,957 +719,13 @@ pre {
   font-weight: 900;
 }
 
-@media (max-width: 1120px) {
-  .hero,
-  .layout {
-    grid-template-columns: 1fr;
-  }
-
-  .result-panel {
-    position: static;
-  }
-}
-
-@media (max-width: 760px) {
-  .app-shell {
-    padding: 22px 14px 40px;
-  }
-
-  .grid.two,
-  .grid.three,
-  .grid.four,
+@media (max-width: 860px) {
   .metrics-grid {
     grid-template-columns: 1fr;
   }
 
-  .section-card {
-    padding: 18px;
-    border-radius: 22px;
-  }
-}
-
-/* Stage 7.3.1 — product UX cleanup.
-   Normal users should see consultation first, not developer/debug data. */
-.debug-only-heading {
-  display: none !important;
-}
-
-.card:has(.debug-only-heading),
-.panel:has(.debug-only-heading),
-.result-card:has(.debug-only-heading),
-section:has(> .debug-only-heading),
-div:has(> .debug-only-heading) {
-  display: none !important;
-}
-
-details[hidden] {
-  display: none !important;
-}
-
-
-/* Stage 7.4: Progressive consultant UX */
-.ux-step-card {
-  position: relative;
-  transition: max-height 220ms ease, opacity 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
-}
-
-.ux-step-card.ux-open {
-  max-height: none;
-  opacity: 1;
-}
-
-.ux-step-card.ux-collapsed {
-  max-height: 112px;
-  overflow: hidden;
-  cursor: pointer;
-  opacity: 0.82;
-}
-
-.ux-step-card.ux-collapsed::after {
-  content: "Раскрыть шаг";
-  position: absolute;
-  right: 18px;
-  bottom: 14px;
-  padding: 6px 10px;
-  border-radius: 999px;
-  background: rgba(37, 99, 235, 0.08);
-  color: #1d4ed8;
-  font-size: 12px;
-  font-weight: 700;
-  pointer-events: none;
-}
-
-.ux-step-card[data-ux-completed="true"] .ux-step-heading::after {
-  content: "✓ заполнено";
-  display: inline-flex;
-  margin-left: 10px;
-  padding: 4px 8px;
-  border-radius: 999px;
-  background: rgba(16, 185, 129, 0.12);
-  color: #047857;
-  font-size: 12px;
-  font-weight: 700;
-  vertical-align: middle;
-}
-
-.ux-step-heading {
-  cursor: pointer;
-  outline: none;
-}
-
-.ux-step-heading:focus-visible {
-  outline: 3px solid rgba(37, 99, 235, 0.35);
-  outline-offset: 4px;
-  border-radius: 10px;
-}
-
-.ux-step-hint {
-  margin-top: -6px;
-  margin-bottom: 12px;
-  color: #64748b;
-  font-size: 12px;
-}
-
-.ux-step-card.ux-collapsed .ux-step-hint {
-  display: none;
-}
-
-.ux-step-actions {
-  margin-top: 16px;
-  display: flex;
-  justify-content: flex-end;
-}
-
-.ux-step-next-button {
-  border: 0;
-  border-radius: 12px;
-  padding: 10px 14px;
-  background: #2563eb;
-  color: #ffffff;
-  font-weight: 700;
-  cursor: pointer;
-}
-
-.ux-step-next-button:hover {
-  filter: brightness(0.96);
-}
-
-.ux-consultant-panel {
-  position: sticky;
-  top: 18px;
-  align-self: start;
-  max-height: calc(100vh - 36px);
-  overflow: auto;
-}
-
-.ux-debug-only {
-  display: none !important;
-}
-
-@media (max-width: 980px) {
-  .ux-consultant-panel {
-    position: static;
-    max-height: none;
-  }
-
-  .ux-step-card.ux-collapsed {
-    max-height: 96px;
-  }
-}
-
-
-/* Stage 7.4.1: compact step titles + two-column progressive layout */
-.ux-steps-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(260px, 1fr));
-  gap: 16px;
-  align-items: start;
-}
-
-/* Expanded step gets full width so fields are readable. Closed steps stay compact in 2 columns. */
-.ux-steps-grid .ux-step-card.ux-open {
-  grid-column: 1 / -1;
-}
-
-/* Closed card shows only the main title. No hints, no fields, no clipped text. */
-.ux-step-card.ux-collapsed {
-  max-height: none !important;
-  min-height: 68px;
-  overflow: visible !important;
-  padding: 18px 54px 18px 20px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-}
-
-.ux-step-card.ux-collapsed > :not(.ux-step-heading) {
-  display: none !important;
-}
-
-.ux-step-card.ux-collapsed .ux-step-heading {
-  margin: 0 !important;
-  padding: 0 !important;
-  line-height: 1.25;
-  white-space: normal;
-  overflow: visible;
-}
-
-/* Small arrow only, not extra text. */
-.ux-step-card.ux-collapsed::after {
-  content: "⌄" !important;
-  position: absolute;
-  top: 50%;
-  right: 20px;
-  bottom: auto;
-  transform: translateY(-50%);
-  padding: 0;
-  background: transparent;
-  color: #2563eb;
-  font-size: 20px;
-  font-weight: 800;
-  pointer-events: none;
-}
-
-.ux-step-card.ux-open::after {
-  display: none !important;
-}
-
-.ux-step-card.ux-open .ux-step-hint {
-  display: block;
-}
-
-.ux-step-card.ux-open .ux-step-actions {
-  display: flex;
-}
-
-/* Completed marker remains compact and readable next to the title. */
-.ux-step-card[data-ux-completed="true"] .ux-step-heading::after {
-  content: "✓ заполнено";
-  display: inline-flex;
-  margin-left: 10px;
-  padding: 4px 8px;
-  border-radius: 999px;
-  background: rgba(16, 185, 129, 0.12);
-  color: #047857;
-  font-size: 12px;
-  font-weight: 700;
-  line-height: 1;
-  vertical-align: middle;
-}
-
-.ux-consultant-panel {
-  min-height: 380px;
-}
-
-@media (max-width: 1180px) {
-  .ux-steps-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .ux-steps-grid .ux-step-card.ux-open {
-    grid-column: auto;
-  }
-}
-
-@media (max-width: 640px) {
-  .ux-step-card.ux-collapsed {
-    padding-right: 48px;
-  }
-}
-
-
-/* Stage 7.4.2: visible collapsed titles, back navigation, full-width consultation area */
-.ux-bottom-consultant-layout {
-  display: grid !important;
-  grid-template-columns: minmax(0, 1fr) !important;
-  gap: 18px !important;
-  align-items: start;
-}
-
-.ux-steps-grid-v2 {
-  display: grid !important;
-  grid-template-columns: repeat(2, minmax(280px, 1fr)) !important;
-  gap: 14px !important;
-  align-items: start;
-  width: 100%;
-}
-
-.ux-steps-grid-v2 .ux-step-card-v2.ux-open {
-  grid-column: 1 / -1 !important;
-}
-
-.ux-step-card-v2 {
-  min-width: 0;
-}
-
-.ux-step-card-v2 .ux-original-heading-hidden {
-  display: none !important;
-}
-
-.ux-step-compact-header {
-  width: 100%;
-  border: 0;
-  background: transparent;
-  color: inherit;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 0;
-  margin: 0 0 12px 0;
-  text-align: left;
-  cursor: pointer;
-}
-
-.ux-step-compact-title {
-  display: block;
-  min-width: 0;
-  color: #0f172a;
-  font-size: 18px;
-  font-weight: 800;
-  line-height: 1.25;
-  white-space: normal;
-  overflow-wrap: anywhere;
-}
-
-.ux-step-compact-status {
-  flex: 0 0 auto;
-  font-size: 12px;
-  font-weight: 700;
-}
-
-.ux-step-card-v2[data-ux-completed="true"] .ux-step-compact-status::before {
-  content: "✓ заполнено";
-  display: inline-flex;
-  padding: 4px 8px;
-  border-radius: 999px;
-  background: rgba(16, 185, 129, 0.12);
-  color: #047857;
-  line-height: 1;
-}
-
-.ux-step-compact-arrow {
-  flex: 0 0 auto;
-  color: #2563eb;
-  font-size: 20px;
-  font-weight: 900;
-  line-height: 1;
-}
-
-.ux-step-card-v2.ux-open .ux-step-compact-arrow {
-  transform: rotate(180deg);
-}
-
-.ux-step-card-v2.ux-collapsed {
-  min-height: 72px !important;
-  max-height: none !important;
-  overflow: visible !important;
-  padding: 18px 20px !important;
-  display: block !important;
-  opacity: 1 !important;
-}
-
-.ux-step-card-v2.ux-collapsed > :not(.ux-step-compact-header) {
-  display: none !important;
-}
-
-.ux-step-card-v2.ux-collapsed::after {
-  display: none !important;
-}
-
-.ux-step-card-v2.ux-open {
-  padding: 20px !important;
-}
-
-.ux-step-card-v2.ux-open > :not(.ux-step-compact-header) {
-  display: revert;
-}
-
-.ux-step-card-v2 .ux-step-actions {
-  margin-top: 18px;
-  display: flex;
-  justify-content: flex-end;
-  gap: 10px;
-  flex-wrap: wrap;
-}
-
-.ux-step-prev-button,
-.ux-step-next-button {
-  border: 0;
-  border-radius: 12px;
-  padding: 10px 14px;
-  font-weight: 700;
-  cursor: pointer;
-}
-
-.ux-step-prev-button {
-  background: #e2e8f0;
-  color: #0f172a;
-}
-
-.ux-step-next-button {
-  background: #2563eb;
-  color: #ffffff;
-}
-
-.ux-step-prev-button:hover,
-.ux-step-next-button:hover {
-  filter: brightness(0.96);
-}
-
-.ux-consultant-panel-bottom {
-  position: static !important;
-  grid-column: 1 / -1 !important;
-  width: 100% !important;
-  max-width: none !important;
-  max-height: none !important;
-  min-height: 420px;
-  overflow: visible !important;
-  margin-top: 4px;
-}
-
-.ux-consultant-panel-bottom textarea,
-.ux-consultant-panel-bottom pre,
-.ux-consultant-panel-bottom [class*="answer"],
-.ux-consultant-panel-bottom [class*="result"] {
-  max-height: none;
-}
-
-@media (max-width: 1180px) {
-  .ux-steps-grid-v2 {
-    grid-template-columns: 1fr !important;
-  }
-
-  .ux-steps-grid-v2 .ux-step-card-v2.ux-open {
-    grid-column: auto !important;
-  }
-}
-
-@media (max-width: 640px) {
-  .ux-step-compact-header {
-    align-items: flex-start;
-  }
-
-  .ux-step-compact-title {
-    font-size: 16px;
-  }
-
-  .ux-step-card-v2 .ux-step-actions {
+  .section-actions,
+  .wizard-actions {
     justify-content: stretch;
   }
-
-  .ux-step-prev-button,
-  .ux-step-next-button {
-    width: 100%;
-  }
 }
-
-
-/* Stage 7.4.3: hard fix for visible closed step titles
-   Reason: older collapsed-card CSS can hide the new compact header.
-   This renders the title from data-ux-title directly on the collapsed card,
-   so the user always sees the step name. */
-.ux-step-card-v2.ux-collapsed {
-  position: relative !important;
-  min-height: 74px !important;
-  max-height: 74px !important;
-  overflow: hidden !important;
-  padding: 18px 54px 18px 20px !important;
-  display: flex !important;
-  align-items: center !important;
-  opacity: 1 !important;
-  cursor: pointer !important;
-}
-
-.ux-step-card-v2.ux-collapsed > * {
-  display: none !important;
-}
-
-.ux-step-card-v2.ux-collapsed::before {
-  content: attr(data-ux-title) !important;
-  display: block !important;
-  color: #0f172a !important;
-  font-size: 18px !important;
-  font-weight: 800 !important;
-  line-height: 1.25 !important;
-  white-space: normal !important;
-  overflow: visible !important;
-  text-overflow: clip !important;
-  z-index: 2 !important;
-}
-
-.ux-step-card-v2.ux-collapsed[data-ux-completed="true"]::before {
-  content: attr(data-ux-title) "  ✓ заполнено" !important;
-}
-
-.ux-step-card-v2.ux-collapsed::after {
-  content: "⌄" !important;
-  display: block !important;
-  position: absolute !important;
-  top: 50% !important;
-  right: 20px !important;
-  bottom: auto !important;
-  transform: translateY(-50%) !important;
-  padding: 0 !important;
-  background: transparent !important;
-  color: #2563eb !important;
-  font-size: 20px !important;
-  font-weight: 900 !important;
-  pointer-events: none !important;
-  z-index: 3 !important;
-}
-
-.ux-step-card-v2.ux-open {
-  max-height: none !important;
-  overflow: visible !important;
-}
-
-.ux-step-card-v2.ux-open::before,
-.ux-step-card-v2.ux-open::after {
-  display: none !important;
-}
-
-.ux-step-card-v2.ux-open > * {
-  display: revert;
-}
-
-.ux-step-card-v2.ux-open > .ux-step-compact-header {
-  display: flex !important;
-}
-
-/* The opened title must be visible too. */
-.ux-step-card-v2.ux-open .ux-step-compact-title {
-  display: block !important;
-  color: #0f172a !important;
-  font-size: 18px !important;
-  font-weight: 800 !important;
-  line-height: 1.25 !important;
-}
-
-/* Keep the consultant area below the steps and full-width for conversation. */
-.ux-consultant-panel-bottom,
-.ux-consultant-panel.ux-consultant-panel-bottom {
-  position: static !important;
-  width: 100% !important;
-  max-width: none !important;
-  grid-column: 1 / -1 !important;
-  margin-top: 20px !important;
-  min-height: 440px !important;
-}
-
-@media (max-width: 1180px) {
-  .ux-step-card-v2.ux-collapsed {
-    max-height: 72px !important;
-    min-height: 72px !important;
-  }
-
-  .ux-step-card-v2.ux-collapsed::before {
-    font-size: 16px !important;
-  }
-}
-
-
-/* Stage 7.4.4: step navigation + continued conversation area */
-.ux-step-navigator {
-  grid-column: 1 / -1;
-  width: 100%;
-  margin: 14px 0 16px 0;
-  padding: 14px;
-  border: 1px solid rgba(148, 163, 184, 0.35);
-  border-radius: 18px;
-  background: rgba(255, 255, 255, 0.72);
-  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06);
-}
-
-.ux-step-navigator-title {
-  margin-bottom: 10px;
-  color: #0f172a;
-  font-size: 14px;
-  font-weight: 800;
-}
-
-.ux-step-navigator-buttons {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(120px, 1fr));
-  gap: 8px;
-}
-
-.ux-step-jump {
-  border: 1px solid rgba(148, 163, 184, 0.45);
-  border-radius: 12px;
-  background: #ffffff;
-  color: #334155;
-  padding: 9px 10px;
-  font-weight: 700;
-  text-align: left;
-  cursor: pointer;
-}
-
-.ux-step-jump:hover,
-.ux-step-jump.is-open {
-  border-color: rgba(37, 99, 235, 0.55);
-  background: rgba(37, 99, 235, 0.07);
-  color: #1d4ed8;
-}
-
-.ux-step-jump.is-completed::after {
-  content: " ✓";
-  color: #047857;
-  font-weight: 900;
-}
-
-.ux-step-navigator-actions {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-  margin-top: 12px;
-}
-
-.ux-step-navigator-actions button,
-.ux-consultation-tools button,
-.ux-followup-actions button {
-  border: 0;
-  border-radius: 12px;
-  padding: 9px 12px;
-  font-weight: 800;
-  cursor: pointer;
-}
-
-.ux-step-navigator-actions button,
-.ux-tools-to-steps,
-.ux-tools-to-question,
-.ux-tools-new-question,
-.ux-followup-show-question {
-  background: #e2e8f0;
-  color: #0f172a;
-}
-
-.ux-followup-send {
-  background: #2563eb;
-  color: #ffffff;
-}
-
-.ux-conversation-panel {
-  display: block !important;
-  width: 100% !important;
-  max-width: none !important;
-}
-
-.ux-consultation-tools {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-  margin: 12px 0 16px 0;
-}
-
-.ux-followup-box {
-  margin-top: 18px;
-  padding: 16px;
-  border-radius: 16px;
-  border: 1px solid rgba(148, 163, 184, 0.35);
-  background: rgba(248, 250, 252, 0.92);
-}
-
-.ux-followup-title {
-  margin-bottom: 10px;
-  color: #0f172a;
-  font-size: 16px;
-  font-weight: 800;
-}
-
-.ux-followup-textarea {
-  width: 100%;
-  min-height: 86px;
-  resize: vertical;
-  border: 1px solid rgba(148, 163, 184, 0.5);
-  border-radius: 14px;
-  padding: 12px;
-  font: inherit;
-  background: #ffffff;
-  color: #0f172a;
-}
-
-.ux-followup-actions {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-  margin-top: 10px;
-}
-
-.ux-followup-hint {
-  margin-top: 8px;
-  color: #64748b;
-  font-size: 12px;
-}
-
-@media (max-width: 980px) {
-  .ux-step-navigator-buttons {
-    grid-template-columns: repeat(2, minmax(120px, 1fr));
-  }
-}
-
-@media (max-width: 560px) {
-  .ux-step-navigator-buttons {
-    grid-template-columns: 1fr;
-  }
-
-  .ux-consultation-tools button,
-  .ux-followup-actions button {
-    width: 100%;
-  }
-}
-
-
-/* Stage 7.5: Repair Object Lifecycle Wizard */
-.stage-logic-note {
-  margin: 12px 0 16px 0;
-  padding: 12px 14px;
-  border-radius: 14px;
-  border: 1px solid rgba(59, 130, 246, 0.2);
-  background: rgba(239, 246, 255, 0.8);
-  color: #1e3a8a;
-  font-size: 14px;
-  line-height: 1.45;
-}
-
-.repair-object-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(240px, 1fr));
-  gap: 14px;
-}
-
-.repair-object-group {
-  border: 1px solid rgba(148, 163, 184, 0.32);
-  border-radius: 18px;
-  padding: 14px;
-  background: rgba(255, 255, 255, 0.78);
-}
-
-.repair-object-group h3 {
-  margin: 0 0 10px 0;
-  color: #0f172a;
-  font-size: 16px;
-  font-weight: 800;
-  text-align: center;
-}
-
-.repair-object-card {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
-  gap: 8px 10px;
-  align-items: start;
-  padding: 11px;
-  border: 1px solid rgba(148, 163, 184, 0.38);
-  border-radius: 14px;
-  background: #ffffff;
-  cursor: pointer;
-  margin-bottom: 8px;
-  transition: border-color 160ms ease, background 160ms ease, transform 160ms ease;
-}
-
-.repair-object-card:hover {
-  border-color: rgba(37, 99, 235, 0.5);
-  background: rgba(239, 246, 255, 0.75);
-}
-
-.repair-object-card.selected {
-  border-color: rgba(16, 185, 129, 0.55);
-  background: rgba(236, 253, 245, 0.88);
-}
-
-.repair-object-card input {
-  margin-top: 3px;
-}
-
-.repair-object-title {
-  color: #0f172a;
-  font-weight: 800;
-  line-height: 1.25;
-}
-
-.repair-object-card small {
-  grid-column: 2 / -1;
-  color: #64748b;
-  line-height: 1.35;
-}
-
-@media (max-width: 880px) {
-  .repair-object-grid {
-    grid-template-columns: 1fr;
-  }
-}
-
-
-/* Stage 7.5 UI flow rebuild v2 */
-.stage-subblock {
-  margin-top: 18px;
-  padding: 16px;
-  border-radius: 18px;
-  border: 1px solid rgba(148, 163, 184, 0.35);
-  background: rgba(248, 250, 252, 0.9);
-}
-
-.stage-subblock h3 {
-  margin: 0 0 10px 0;
-  color: #0f172a;
-  font-size: 17px;
-  font-weight: 900;
-}
-
-.stage-subblock-note {
-  margin: 0 0 12px 0;
-  color: #475569;
-  line-height: 1.45;
-  font-size: 14px;
-}
-
-.stage-logic-note {
-  margin: 12px 0 16px 0;
-  padding: 12px 14px;
-  border-radius: 14px;
-  border: 1px solid rgba(132, 204, 22, 0.35);
-  background: rgba(247, 254, 231, 0.8);
-  color: #365314;
-  font-size: 14px;
-  line-height: 1.45;
-}
-
-.stage-nav button,
-.stage-chip,
-.step-chip,
-.step-tab {
-  text-align: center;
-  justify-content: center;
-}
-
-/* Stage 7.5 final UI fix: full-width expanded steps + polished navigation buttons */
-.stage-card-open-wide,
-.section-card.open,
-.section-card.expanded,
-.section-card.active,
-.stage-section.open,
-.stage-section.expanded,
-.stage-section.active,
-.wizard-section.open,
-.wizard-section.expanded,
-.wizard-section.active {
-  grid-column: 1 / -1;
-}
-
-.section-actions,
-.wizard-actions {
-  display: flex;
-  gap: 12px;
-  align-items: center;
-  margin-top: 18px;
-  flex-wrap: wrap;
-}
-
-.section-actions .primary-button,
-.wizard-actions .primary-button,
-.wizard-primary-button {
-  min-height: 42px;
-  padding: 10px 18px;
-  border-radius: 14px;
-  border: 1px solid rgba(37, 99, 235, 0.35);
-  background: linear-gradient(135deg, #2563eb, #0ea5e9);
-  color: #ffffff;
-  font-weight: 800;
-  cursor: pointer;
-  box-shadow: 0 8px 18px rgba(37, 99, 235, 0.22);
-}
-
-.section-actions .secondary-button,
-.wizard-actions .secondary-button,
-.wizard-secondary-button {
-  min-height: 42px;
-  padding: 10px 16px;
-  border-radius: 14px;
-  border: 1px solid rgba(148, 163, 184, 0.55);
-  background: rgba(255, 255, 255, 0.86);
-  color: #334155;
-  font-weight: 800;
-  cursor: pointer;
-}
-
-.section-actions .secondary-button:hover,
-.wizard-actions .secondary-button:hover,
-.wizard-secondary-button:hover {
-  background: rgba(241, 245, 249, 0.96);
-  border-color: rgba(100, 116, 139, 0.7);
-}
-
-.section-actions .primary-button:hover,
-.wizard-actions .primary-button:hover,
-.wizard-primary-button:hover {
-  filter: brightness(1.03);
-  transform: translateY(-1px);
-}
-
-/* Stage 7.5 no-expandedCards geometry fix */
-.stage-card-force-wide,
-.section-card.stage-card-force-wide,
-.card.stage-card-force-wide,
-.ux-card.stage-card-force-wide,
-.wizard-card.stage-card-force-wide,
-section.stage-card-force-wide,
-article.stage-card-force-wide,
-div.stage-card-force-wide {
-  grid-column: 1 / -1 !important;
-  width: 100% !important;
-  max-width: none !important;
-}
-
-/* Fallback: geometry block contains wizard Back/Next controls. */
-section:has(.wizard-secondary-button),
-article:has(.wizard-secondary-button),
-div:has(> .wizard-secondary-button),
-section:has(.wizard-primary-button),
-article:has(.wizard-primary-button),
-div:has(> .wizard-primary-button) {
-  grid-column: 1 / -1 !important;
-  width: 100% !important;
-  max-width: none !important;
-}
-
-.section-actions.wizard-actions {
-  display: flex;
-  gap: 12px;
-  align-items: center;
-  margin-top: 18px;
-  flex-wrap: wrap;
-}
-
-.wizard-primary-button,
-.ux-step-next-button {
-  min-height: 44px;
-  padding: 11px 20px;
-  border-radius: 14px;
-  border: 1px solid rgba(37, 99, 235, 0.35);
-  background: linear-gradient(135deg, #2563eb, #0ea5e9);
-  color: #ffffff;
-  font-weight: 800;
-  cursor: pointer;
-  box-shadow: 0 8px 18px rgba(37, 99, 235, 0.22);
-}
-
-.wizard-secondary-button,
-.ux-step-prev-button {
-  min-height: 44px;
-  padding: 11px 18px;
-  border-radius: 14px;
-  border: 1px solid rgba(148, 163, 184, 0.65);
-  background: rgba(255, 255, 255, 0.92);
-  color: #334155;
-  font-weight: 800;
-  cursor: pointer;
-}
-
-.wizard-primary-button:hover,
-.wizard-secondary-button:hover,
-.ux-step-next-button:hover,
-.ux-step-prev-button:hover {
-  transform: translateY(-1px);
-  filter: brightness(1.02);
-}
-
