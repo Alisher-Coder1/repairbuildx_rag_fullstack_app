@@ -1,4 +1,4 @@
-/* === БАЗОВЫЕ ПЕРЕМЕННЫЕ === */
+﻿/* === БАЗОВЫЕ ПЕРЕМЕННЫЕ === */
 :root {
   --bg: #f5f7fb;
   --card-bg: rgba(255, 255, 255, 0.95);
@@ -729,3 +729,92 @@ pre,
     justify-content: stretch;
   }
 }
+
+/* === CONSULTATION DIALOG UI === */
+
+.dialog-box {
+  margin-top: 16px;
+}
+
+.dialog-box-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.dialog-box-header h3 {
+  margin: 0;
+}
+
+.dialog-box-header span {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.dialog-window {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-height: 560px;
+  overflow: auto;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  background: #f8fafc;
+}
+
+.dialog-message {
+  max-width: 92%;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  box-shadow: var(--shadow-sm);
+}
+
+.dialog-message-user {
+  align-self: flex-end;
+  background: #eff6ff;
+  border-color: rgba(37, 99, 235, 0.22);
+}
+
+.dialog-message-assistant {
+  align-self: flex-start;
+  background: #ffffff;
+}
+
+.dialog-message-author {
+  margin-bottom: 6px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.dialog-message pre {
+  overflow: visible;
+  margin: 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+  color: #263047;
+  line-height: 1.55;
+  font-family: inherit;
+  font-size: 14px;
+}
+
+.dialog-placeholder {
+  padding: 28px 12px;
+  border: 1px dashed var(--border);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.65);
+  color: var(--muted);
+  text-align: center;
+}
+
+@media (max-width: 640px) {
+  .dialog-message {
+    max-width: 100%;
+  }
+}
+
