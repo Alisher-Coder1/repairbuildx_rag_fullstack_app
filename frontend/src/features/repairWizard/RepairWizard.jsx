@@ -91,6 +91,7 @@ export default function RepairWizard() {
   const [userGoals, setUserGoals] = useState({ budget_level: "средний", priority: ["долговечность", "простота ухода"], notes: "Нужен практичный ремонт без лишних дорогих решений." });
   const [userQuestion, setUserQuestion] = useState("Подготовь базовую консультацию и расчёт для ремонта помещения.");
   const [result, setResult] = useState(null);
+  const [dialogMessages, setDialogMessages] = useState([]);
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
@@ -265,7 +266,27 @@ export default function RepairWizard() {
         throw new Error(text || `HTTP ${response.status}`);
       }
 
-      setResult(await response.json());
+      const data = await response.json();
+      setResult(data);
+
+      const assistantAnswer =
+        data?.answer ||
+        data?.consultant_answer ||
+        data?.response ||
+        data?.message ||
+        JSON.stringify(data, null, 2);
+
+      setDialogMessages((current) => [
+        ...current,
+        {
+          role: "user",
+          text: userQuestion?.trim() || "Подготовь базовую консультацию и расчёт для ремонта помещения.",
+        },
+        {
+          role: "assistant",
+          text: assistantAnswer,
+        },
+      ]);
     } catch (fetchError) {
       setError(fetchError?.message || "Не удалось получить ответ от backend.");
     } finally {
@@ -396,7 +417,32 @@ export default function RepairWizard() {
                   <div><span>Проёмы</span><strong>{roundNumber(getMetric(resultSource, ["openings_area", "opening_area", "openingsArea"]))} м²</strong></div>
                   <div><span>Плинтус</span><strong>{roundNumber(getMetric(resultSource, ["plinth", "baseboard", "perimeter"]))} м.пог.</strong></div>
                 </div>
-                <div className="answer-box"><h3>Консультация</h3><pre>{answer}</pre></div>
+                <div className="dialog-box">
+  <div className="dialog-box-header">
+    <h3>Диалог с консультантом</h3>
+    <span>{dialogMessages.length ? ${Math.ceil(dialogMessages.length / 2)} ответ(ов) : "ожидание"}</span>
+  </div>
+
+  <div className="dialog-window" aria-live="polite">
+    {dialogMessages.length ? (
+      dialogMessages.map((message, index) => (
+        <div
+          key={${message.role}-${index}}
+          className={dialog-message ${message.role === "user" ? "dialog-message-user" : "dialog-message-assistant"}}
+        >
+          <div className="dialog-message-author">
+            {message.role === "user" ? "Вы" : "AI-консультант"}
+          </div>
+          <pre>{message.text}</pre>
+        </div>
+      ))
+    ) : (
+      <div className="dialog-placeholder">
+        После отправки вопроса здесь появится диалог.
+      </div>
+    )}
+  </div>
+</div>
                 {Array.isArray(ragFragments) && ragFragments.length ? <details hidden className="rag-details"><summary>Технические источники / RAG-фрагменты</summary><pre>{JSON.stringify(ragFragments, null, 2)}</pre></details> : null}
               </>
             ) : <div className="empty-result"><p>После запуска здесь появятся расчётные показатели и консультация.</p></div>}
@@ -410,4 +456,5 @@ export default function RepairWizard() {
     </main>
   );
 }
+
 
