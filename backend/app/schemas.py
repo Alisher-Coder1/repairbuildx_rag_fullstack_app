@@ -1,4 +1,4 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
 from typing import Any, Dict, List, Optional
 from pydantic import BaseModel, Field
@@ -60,6 +60,7 @@ class RepairContext(BaseModel):
     property_condition: str = "unknown"
     repair_level: str = "unknown"
     has_existing_finish: bool = False
+    user_comment: str = ""
 
 
 class Engineering(BaseModel):
@@ -176,3 +177,5 @@ class ConsultationResponse(BaseModel):
     validation_warnings: List[ValidationIssue] = Field(default_factory=list)
     rag_fragments: List[Dict[str, Any]] = Field(default_factory=list)
     request_payload: Dict[str, Any]
+
+
