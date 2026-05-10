@@ -818,3 +818,135 @@ pre,
   }
 }
 
+
+/* === Stage 7.6 unified consultation dialog === */
+
+.consultation-single-layout {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.consultation-single-layout .form-panel {
+  max-width: 100%;
+}
+
+.consultation-dialog-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.consultation-chat-window {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-height: 300px;
+  max-height: 680px;
+  overflow: auto;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  background: #f8fafc;
+}
+
+.dialog-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 220px;
+  padding: 24px;
+  border: 1px dashed var(--border);
+  border-radius: 18px;
+  color: var(--muted);
+  text-align: center;
+  background: rgba(255, 255, 255, 0.7);
+}
+
+.dialog-message {
+  max-width: 94%;
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  box-shadow: var(--shadow-sm);
+}
+
+.dialog-message-user {
+  align-self: flex-end;
+  background: #eff6ff;
+  border-color: rgba(37, 99, 235, 0.24);
+}
+
+.dialog-message-assistant {
+  align-self: flex-start;
+  background: #ffffff;
+}
+
+.dialog-message-author {
+  margin-bottom: 8px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.dialog-message pre,
+.dialog-answer-text {
+  margin: 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+  color: #263047;
+  font-family: inherit;
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+.dialog-metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.dialog-metric-item {
+  padding: 10px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: #f8fafc;
+}
+
+.dialog-metric-item span {
+  display: block;
+  margin-bottom: 4px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.dialog-metric-item strong {
+  font-size: 15px;
+}
+
+.dialog-input-area {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.dialog-input-label {
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 900;
+}
+.dialog-actions {
+  display: flex;
+  justify-content: flex-start;
+}
+
+@media (max-width: 760px) {
+  .dialog-message {
+    max-width: 100%;
+  }
+
+  .dialog-metrics-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
